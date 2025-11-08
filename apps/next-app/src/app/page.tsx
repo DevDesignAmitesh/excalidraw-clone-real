@@ -1,5 +1,7 @@
+import { CanvasPlayground } from "@/pages-x/CanvasPlayground";
+
 const root = () => {
-  return <div>hello</div>;
+  return <CanvasPlayground />;
 };
 
 export default root;
