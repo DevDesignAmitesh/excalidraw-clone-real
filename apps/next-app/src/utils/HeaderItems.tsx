@@ -4,20 +4,9 @@ import { FaRegCircle, FaRegHandPaper, FaRegSquare } from "react-icons/fa";
 import { FiMousePointer } from "react-icons/fi";
 import { ImTextColor } from "react-icons/im";
 import { IoImagesOutline } from "react-icons/io5";
+import { TbPencil } from "react-icons/tb";
+import { HeaderItemsProps } from "./types";
 
-export type toolType =
-  | "hand"
-  | "mouse"
-  | "rectangle"
-  | "circle"
-  | "text"
-  | "eraser"
-  | "img";
-
-interface HeaderItemsProps {
-  icon: ReactElement;
-  label: toolType;
-}
 
 export const HeaderItems: HeaderItemsProps[] = [
   {
@@ -35,6 +24,10 @@ export const HeaderItems: HeaderItemsProps[] = [
   {
     label: "circle",
     icon: <FaRegCircle />,
+  },
+  {
+    label: "pencil",
+    icon: <TbPencil />,
   },
   {
     label: "text",
