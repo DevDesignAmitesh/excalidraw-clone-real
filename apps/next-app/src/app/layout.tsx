@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProviderComp } from "@/provider/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Excalidraw Clone",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <ThemeProviderComp>
+        <body>{children}</body>
+      </ThemeProviderComp>
     </html>
   );
 }

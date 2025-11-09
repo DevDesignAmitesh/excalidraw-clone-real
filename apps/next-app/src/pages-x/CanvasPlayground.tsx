@@ -5,9 +5,28 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { HeaderLeftBar } from "@/components/HeaderLeftBar";
 import { HeaderRightBar } from "@/components/HeaderRightBar";
+import { toolType } from "@/utils/HeaderItems";
+import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 
 export const CanvasPlayground = () => {
+  // getting the theme from next-themes
+  const { theme } = useTheme()
+
+  // for teacking the tool
+  const [selectedTool, setSelectedTool] = useState<toolType>("hand");
+
+  // for handling the bg color of the canvas
+  const [bgColor, setBgColor] = useState<string>(
+    theme === "dark" ? "#121212" : "#fff"
+  );
+
+  // toggling bg color when theme changes
+  useEffect(() => {
+    const newBgTheme = theme === "dark" ? "#121212" : "#fff"
+    setBgColor(newBgTheme);
+  }, [theme]);
+
   // for handling the left side bar
   const [leftSideBarOpen, setLeftSideBarOpen] = useState<boolean>(false);
   const leftSideBarRef = useRef<HTMLDivElement>(null);
@@ -66,15 +85,19 @@ export const CanvasPlayground = () => {
   }, [leftSideBarOpen, rightSideBarOpen]);
   return (
     <>
-      <div className="relative h-screen w-full bg-[#121212]">
+      <div className="relative h-screen w-full">
         <Header
+          selectedTool={selectedTool} 
+          setSelectedTool={setSelectedTool}
           handleLeftSideBar={toggleLeftSideBar}
           handleRightSideBar={toggleRightSideBar}
         />
-        <Canvas />
+        <Canvas selectedTool={selectedTool} bgColor={bgColor} />
         <Footer />
       </div>
-      {leftSideBarOpen && <HeaderLeftBar leftSideBarRef={leftSideBarRef} />}
+      {leftSideBarOpen && (
+        <HeaderLeftBar setBgColor={setBgColor} leftSideBarRef={leftSideBarRef} />
+      )}
       {rightSideBarOpen && <HeaderRightBar rightSideBarRef={rightSideBarRef} />}
     </>
   );
