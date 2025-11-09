@@ -13,12 +13,16 @@ class ShapesStorage {
     return JSON.parse(allShapes) as Shape[];
   }
 
-  updateShape(shapeId: string, shape: Shape) {
+  updateShape(shapeId: string, shape: Partial<Shape>) {
     const allShapes = this.getAllShapes();
     let wantToUpdate = allShapes.find((item) => item.id === shapeId);
     if (wantToUpdate) {
-      wantToUpdate = shape;
-      allShapes.push(wantToUpdate);
+      // TODO: MAYBE A ERROR
+      const filterdShapes = allShapes.filter(
+        (item) => item.id !== wantToUpdate.id
+      );
+      const updatedShape = { ...wantToUpdate, shape };
+      filterdShapes.push(updatedShape);
       localStorage.setItem(`shapes`, JSON.stringify(allShapes));
     }
   }

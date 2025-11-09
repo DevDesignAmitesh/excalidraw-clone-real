@@ -22,6 +22,10 @@ export type Shape =
       y: number;
       width: number;
       height: number;
+      bgColor: string;
+      strokeColor: string;
+      strokeStyle: string;
+      borderRadius: string;
     }
   | {
       id: string;
@@ -34,4 +38,11 @@ export type Shape =
       id: string;
       type: "pencil";
       path: { x: number; y: number }[];
+    }
+  | {
+      id: string;
+      type: "text";
+      x: number;
+      y: number;
+      input: string;
     };

@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { HeaderLeftBar } from "@/components/HeaderLeftBar";
 import { HeaderRightBar } from "@/components/HeaderRightBar";
+import { ToolSideBar } from "@/components/ToolSideBar";
 import { toolType } from "@/utils/types";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
@@ -16,16 +17,17 @@ export const CanvasPlayground = () => {
   // for teacking the tool
   const [selectedTool, setSelectedTool] = useState<toolType>("hand");
 
+  // for handling selectedShapeId
+  const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+
   // for handling the bg color of the canvas
   const [bgColor, setBgColor] = useState<string>(
     theme === "dark" ? "#121212" : "#fff"
   );
 
-  // toggling bg color when theme changes
-  useEffect(() => {
-    const newBgTheme = theme === "dark" ? "#121212" : "#fff";
-    setBgColor(newBgTheme);
-  }, [theme]);
+  // for handling the right side bar
+  const [rightSideBarOpen, setRightSideBarOpen] = useState<boolean>(false);
+  const rightSideBarRef = useRef<HTMLDivElement>(null);
 
   // for handling the left side bar
   const [leftSideBarOpen, setLeftSideBarOpen] = useState<boolean>(false);
@@ -35,13 +37,15 @@ export const CanvasPlayground = () => {
     setLeftSideBarOpen((p) => !p);
   };
 
-  // for handling the right side bar
-  const [rightSideBarOpen, setRightSideBarOpen] = useState<boolean>(false);
-  const rightSideBarRef = useRef<HTMLDivElement>(null);
-
   const toggleRightSideBar = () => {
     setRightSideBarOpen((p) => !p);
   };
+
+  // toggling bg color when theme changes
+  useEffect(() => {
+    const newBgTheme = theme === "dark" ? "#121212" : "#fff";
+    setBgColor(newBgTheme);
+  }, [theme]);
 
   useEffect(() => {
     const handleCloseLeftSideBar = (event: globalThis.MouseEvent) => {
@@ -92,7 +96,12 @@ export const CanvasPlayground = () => {
           handleLeftSideBar={toggleLeftSideBar}
           handleRightSideBar={toggleRightSideBar}
         />
-        <Canvas selectedTool={selectedTool} bgColor={bgColor} theme={theme} />
+        <Canvas
+          setSelectedShapeId={setSelectedShapeId}
+          selectedTool={selectedTool}
+          bgColor={bgColor}
+          theme={theme}
+        />
         <Footer />
       </div>
       {leftSideBarOpen && (
@@ -101,6 +110,15 @@ export const CanvasPlayground = () => {
           leftSideBarRef={leftSideBarRef}
         />
       )}
+      {selectedTool !== "hand" &&
+        selectedTool !== "img" &&
+        selectedTool !== "mouse" &&
+        selectedTool !== "eraser" && (
+          <ToolSideBar
+            selectedShapeId={selectedShapeId}
+            selectedTool={selectedTool}
+          />
+        )}
       {rightSideBarOpen && <HeaderRightBar rightSideBarRef={rightSideBarRef} />}
     </>
   );
