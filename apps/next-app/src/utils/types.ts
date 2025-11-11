@@ -24,8 +24,9 @@ export type Shape =
       height: number;
       bgColor: string;
       strokeColor: string;
-      strokeStyle: string;
-      borderRadius: string;
+      strokeStyle: "dashed" | "dotted" | "line";
+      borderRadius: number;
+      opacity: number;
     }
   | {
       id: string;
@@ -33,11 +34,16 @@ export type Shape =
       x: number;
       y: number;
       radius: number;
+      strokeColor: string;
+      bgColor: string;
+      opacity: number;
     }
   | {
       id: string;
       type: "pencil";
       path: { x: number; y: number }[];
+      strokeColor: string;
+      opacity: number;
     }
   | {
       id: string;
@@ -45,4 +51,9 @@ export type Shape =
       x: number;
       y: number;
       input: string;
+      color: string;
+      borderColor: string;
+      opacity: number;
+      font: string;
+      fontSize: string;
     };

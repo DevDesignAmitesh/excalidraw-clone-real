@@ -1,6 +1,7 @@
 import { CanvasEngine } from "@/canvas-engine";
-import { toolType } from "@/utils/types";
+import { Shape, toolType } from "@/utils/types";
 import { useEffect, useRef, useState } from "react";
+import { v4 as uuid } from "uuid";
 
 interface CanvasProps {
   selectedTool: toolType;
@@ -18,14 +19,12 @@ export const Canvas = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasEngine = useRef<CanvasEngine | null>(null);
 
-  const [input, setInput] = useState<{
-    x: number;
-    y: number;
-    input: string;
-  } | null>(null);
+  const [input, setInput] = useState<Shape | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   if (typeof window === "undefined" || !theme) return null;
+
+  const themedColor = theme === "dark" ? "#fff" : "#000";
 
   // ✅ Focus AFTER textarea is rendered
   useEffect(() => {
@@ -36,7 +35,7 @@ export const Canvas = ({
 
   const handleBlur = () => {
     if (!input) return;
-    canvasEngine.current?.createText(input);
+    canvasEngine.current?.createText({ inputShape: input, isNew: true });
     setInput(null);
   };
 
@@ -62,48 +61,58 @@ export const Canvas = ({
 
   return (
     <>
-      <canvas
-        ref={canvasRef}
-        height={window.innerHeight}
-        width={window.innerWidth}
-        style={{ backgroundColor: bgColor }}
-        onClick={(e) => {
-          if (selectedTool === "text") {
-            setInput({
-              input: "",
-              x: e.clientX,
-              y: e.clientY,
-            });
-          } else {
-            setInput(null);
-          }
-        }}
-      />
-
-      {input && selectedTool === "text" && (
-        <textarea
-          ref={inputRef}
-          className="absolute z-50 border rounded-md p-2 w-40"
-          placeholder="Enter text"
-          style={{
-            top: input.y,
-            left: input.x,
-            color: theme === "dark" ? "#e5e5e5" : "#404040",
-            borderColor: theme === "dark" ? "#e5e5e5" : "#404040",
-            boxSizing: "content-box",
-            position: "absolute",
-            transform: "translate(-50%, -50%)",
-          }}
-          value={input.input}
-          onChange={(e) => setInput({ ...input, input: e.target.value })}
-          onBlur={handleBlur}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleBlur();
-            }
-          }}
-        />
+      {input && input.type === "text" && selectedTool === "text" && (
+        <>
+          <canvas
+            ref={canvasRef}
+            height={window.innerHeight}
+            width={window.innerWidth}
+            style={{ backgroundColor: bgColor }}
+            onClick={(e) => {
+              if (input.type === "text" && selectedTool === "text") {
+                setInput({
+                  id: uuid(),
+                  type: "text",
+                  input: "",
+                  x: e.clientX,
+                  y: e.clientY,
+                  opacity: 100,
+                  color: themedColor,
+                  borderColor: themedColor,
+                  font: "serif",
+                  fontSize: "24px",
+                });
+              } else {
+                setInput(null);
+              }
+            }}
+          />
+          <textarea
+            ref={inputRef}
+            className="absolute z-50 border rounded-md p-2 w-40"
+            placeholder="Enter text"
+            style={{
+              top: input.y,
+              left: input.x,
+              color: input.color,
+              borderColor: input.borderColor,
+              boxSizing: "content-box",
+              position: "absolute",
+              transform: "translate(-50%, -50%)",
+              fontFamily: input.font,
+              fontSize: input.fontSize,
+            }}
+            value={input.input}
+            onChange={(e) => setInput({ ...input, input: e.target.value })}
+            onBlur={handleBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleBlur();
+              }
+            }}
+          />
+        </>
       )}
     </>
   );

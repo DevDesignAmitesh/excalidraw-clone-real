@@ -56,30 +56,14 @@ export class CanvasEngine {
 
     allShapes.forEach((item) => {
       if (item.type === "circle") {
-        const { radius, x, y } = item;
-        this.createCircle({
-          radius,
-          xAxis: x,
-          yAxis: y,
-        });
+        this.createCircle({ shape: item });
       } else if (item.type === "pencil") {
-        const { path } = item;
-        this.createPencil({
-          path,
-        });
+        this.createPencil({ shape: item });
       } else if (item.type === "rectangle") {
-        const { height, width, x, y } = item;
-        this.createRect({
-          h: height,
-          w: width,
-          xAxis: x,
-          yAxis: y,
-        });
+        this.createRect({ shape: item });
       } else if (item.type === "text") {
         const { input, x, y } = item;
-        this.ctx.font = "20px serif";
-        this.ctx.fillStyle = this.theme === "dark" ? "#fff" : "#000";
-        this.ctx.fillText(input, x, y);
+        this.createText({ inputShape: item, isNew: false });
       }
     });
   };
@@ -165,72 +149,168 @@ export class CanvasEngine {
     }
   };
 
-  createRect = (e: MouseEvent, shape: Shape) => {
-    if (shape.type === "rectangle") {
-      const width = shape.width ?? (e ? e.clientX - this.startX : 0);
-      const height = shape.height ?? (e ? e.clientY - this.startY : 0);
-      const x = shape.x ?? this.startX;
-      const y = shape.y ?? this.startY;
+  createRect = ({ e, shape }: { e?: MouseEvent; shape?: Shape }) => {
+    if (shape) {
+      if (shape.type === "rectangle") {
+        const {
+          bgColor,
+          borderRadius,
+          height,
+          opacity,
+          strokeColor,
+          strokeStyle,
+          width,
+          x,
+          y,
+        } = shape;
+        const WIDTH = width ?? (e ? e.clientX - this.startX : 0);
+        const HEIGHT = height ?? (e ? e.clientY - this.startY : 0);
+        const X = x ?? this.startX;
+        const Y = y ?? this.startY;
 
-      this.ctx.strokeStyle =
-        (shape.strokeColor ?? this.theme === "dark") ? "#fff" : "#000";
-      this.ctx.strokeRect(x, y, width, height);
+        const themedColor = this.theme === "dark" ? "#fff" : "#000";
+
+        // just for this shape
+        this.ctx.globalAlpha = opacity;
+
+        if (strokeStyle === "dashed") {
+          this.ctx.setLineDash([10, 5]); // 10px line, 5px gap
+        } else if (strokeStyle === "dotted") {
+          this.ctx.setLineDash([1, 5]); // 1px dot, 5px gap
+        } else if (strokeStyle === "line") {
+          this.ctx.setLineDash([0, 0]); // 0px dot, 0px gap
+        }
+
+        if (bgColor !== "") {
+          this.ctx.fillStyle = bgColor ?? themedColor;
+          this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+        } else {
+          this.ctx.strokeStyle = strokeColor ?? themedColor;
+          this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+        }
+
+        // back to normal
+        this.ctx.globalAlpha = 1.0;
+      }
+    } else if (e) {
+      // WE HAVE TO ADD DETAILS HERE FROM THE LEFT SIDE BAR.......
+      if (shape.type === "rectangle") {
+        const WIDTH = width ?? (e ? e.clientX - this.startX : 0);
+        const HEIGHT = height ?? (e ? e.clientY - this.startY : 0);
+        const X = x ?? this.startX;
+        const Y = y ?? this.startY;
+
+        const themedColor = this.theme === "dark" ? "#fff" : "#000";
+
+        // just for this shape
+        this.ctx.globalAlpha = opacity;
+
+        if (strokeStyle === "dashed") {
+          this.ctx.setLineDash([10, 5]); // 10px line, 5px gap
+        } else if (strokeStyle === "dotted") {
+          this.ctx.setLineDash([1, 5]); // 1px dot, 5px gap
+        } else if (strokeStyle === "line") {
+          this.ctx.setLineDash([0, 0]); // 0px dot, 0px gap
+        }
+
+        if (bgColor !== "") {
+          this.ctx.fillStyle = bgColor ?? themedColor;
+          this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+        } else {
+          this.ctx.strokeStyle = strokeColor ?? themedColor;
+          this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+        }
+
+        // back to normal
+        this.ctx.globalAlpha = 1.0;
+      }
     }
   };
 
-  createCircle = (e: MouseEvent, shape: Shape) => {
+  createCircle = ({ e, shape }: { e?: MouseEvent; shape?: Shape }) => {
     if (shape.type === "circle") {
+      const { bgColor, opacity, radius, strokeColor, x, y } = shape;
       const dx = e ? e.clientX - this.startX : 0;
       const dy = e ? e.clientY - this.startY : 0;
-      const r = shape.radius ?? Math.sqrt(dx * dx + dy * dy);
-      const x = shape.x ?? this.startX;
-      const y = shape.y ?? this.startY;
+      const r = radius ?? Math.sqrt(dx * dx + dy * dy);
+      const X = x ?? this.startX;
+      const Y = y ?? this.startY;
 
+      const themedColor = this.theme === "dark" ? "#fff" : "#000";
       this.ctx.beginPath();
-      this.ctx.arc(x, y, r, 0, 2 * Math.PI);
-      this.ctx.strokeStyle =
-        (shape.strokeColor ?? this.theme === "dark") ? "#fff" : "#000";
-      this.ctx.stroke();
+      // for just this shape
+      this.ctx.globalAlpha = opacity;
+      if (bgColor !== "") {
+        this.ctx.arc(X, Y, r, 0, 2 * Math.PI);
+        this.ctx.fillStyle = bgColor ?? themedColor;
+        this.ctx.fill();
+      } else {
+        this.ctx.strokeStyle = strokeColor ?? themedColor;
+        this.ctx.stroke();
+      }
+      // 0.0 to 1.0
+      this.ctx.globalAlpha = 1.0;
     }
   };
 
-  createPencil = (shape: Shape) => {
+  createPencil = ({
+    path,
+    shape,
+  }: {
+    path?: { x: number; y: number }[];
+    shape?: Shape;
+  }) => {
     if (shape.type === "pencil") {
-      if (!shape.path) return;
+      if (!path) return;
 
       this.ctx.beginPath();
-      this.ctx.moveTo(shape.path[0].x, shape.path[0].y);
+      this.ctx.moveTo(path[0].x, path[0].y);
 
-      for (let i = 1; i < shape.path.length; i++) {
-        this.ctx.lineTo(shape.path[i].x, shape.path[i].y);
+      for (let i = 1; i < path.length; i++) {
+        this.ctx.lineTo(path[i].x, path[i].y);
       }
 
-      this.ctx.strokeStyle =
-        (shape.strokeColor ?? this.theme === "dark") ? "#fff" : "#000";
+      const themedColor = this.theme === "dark" ? "#fff" : "#000";
+
+      this.ctx.strokeStyle = strokeColor ?? themedColor;
       this.ctx.lineWidth = 2;
       this.ctx.lineCap = "round";
       this.ctx.lineJoin = "round";
+
+      // for this shape only
+      this.ctx.globalAlpha = opacity;
       this.ctx.strokeStyle = this.theme === "dark" ? "#fff" : "#000";
       this.ctx.stroke();
+
+      // reseting it for rest of the images
+      this.ctx.globalAlpha = 1.0;
     }
   };
 
-  createText = (inputShape: Shape) => {
+  createText = ({
+    inputShape,
+    isNew,
+  }: {
+    inputShape: Shape;
+    isNew: boolean;
+  }) => {
     if (inputShape.type === "text") {
-      this.ctx.font = "20px serif";
-      this.ctx.fillStyle = this.theme === "dark" ? "#fff" : "#000";
-      this.ctx.fillText(inputShape.input, inputShape.x, inputShape.y);
+      const { color, input, opacity, x, y, font, fontSize } = inputShape;
 
-      let shape: Shape = {
-        id: uuid(),
-        type: "text",
-        x: inputShape.x,
-        y: inputShape.y,
-        input: inputShape.input,
-      };
+      this.ctx.font = `${fontSize} ${font}`;
 
-      shapesStorage.saveShape(shape);
-      this.renderAllTheShapes();
+      // for this shape
+      this.ctx.globalAlpha = opacity;
+      this.ctx.fillStyle = color;
+      this.ctx.fillText(input, x, y);
+
+      if (isNew) {
+        shapesStorage.saveShape(inputShape);
+        this.renderAllTheShapes();
+      }
+
+      // reseting it
+      this.ctx.globalAlpha = 1.0;
     }
   };
 
