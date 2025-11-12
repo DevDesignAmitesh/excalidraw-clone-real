@@ -3,13 +3,9 @@ import { useTheme } from "next-themes";
 
 interface ToolSideBarProps {
   selectedTool: toolType;
-  selectedShapeId: string | null;
 }
 
-export const ToolSideBar = ({
-  selectedTool,
-  selectedShapeId,
-}: ToolSideBarProps) => {
+export const ToolSideBar = ({ selectedTool }: ToolSideBarProps) => {
   const { theme } = useTheme();
 
   const softerBackgrounds = [

@@ -1,4 +1,5 @@
-import { HeaderItems, toolType } from "@/utils/HeaderItems";
+import { HeaderItems } from "@/utils/HeaderItems";
+import { toolType } from "@/utils/types";
 import { RxHamburgerMenu } from "react-icons/rx";
 
 interface HeaderProps {

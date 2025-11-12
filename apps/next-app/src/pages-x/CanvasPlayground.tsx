@@ -6,9 +6,10 @@ import { Header } from "@/components/Header";
 import { HeaderLeftBar } from "@/components/HeaderLeftBar";
 import { HeaderRightBar } from "@/components/HeaderRightBar";
 import { ToolSideBar } from "@/components/ToolSideBar";
-import { toolType } from "@/utils/types";
+import { Shape, toolType } from "@/utils/types";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
+import { v4 as uuid } from "uuid";
 
 export const CanvasPlayground = () => {
   // getting the theme from next-themes
@@ -32,6 +33,31 @@ export const CanvasPlayground = () => {
   // for handling the left side bar
   const [leftSideBarOpen, setLeftSideBarOpen] = useState<boolean>(false);
   const leftSideBarRef = useRef<HTMLDivElement>(null);
+
+  const themedColor = theme === "dark" ? "#fff" : "#000";
+
+  const [shapesDetails, setShapesDetails] = useState<Shape>({
+    // TODO: find better solution for this ts bug;
+    type: selectedTool as any,
+
+    bgColor: themedColor,
+    borderColor: themedColor,
+    borderRadius: 0,
+    color: themedColor,
+    font: "serif",
+    fontSize: "20px",
+    id: uuid(),
+    input: "",
+    opacity: 1.0,
+    path: [{ x: 0, y: 0 }],
+    radius: 1,
+    strokeColor: themedColor,
+    strokeStyle: "line",
+    height: 1,
+    width: 1,
+    x: 1,
+    y: 1,
+  });
 
   const toggleLeftSideBar = () => {
     setLeftSideBarOpen((p) => !p);
@@ -90,14 +116,16 @@ export const CanvasPlayground = () => {
   return (
     <>
       <div className="relative h-screen w-full">
-        <Header
+        <Header 
           selectedTool={selectedTool}
           setSelectedTool={setSelectedTool}
           handleLeftSideBar={toggleLeftSideBar}
           handleRightSideBar={toggleRightSideBar}
         />
         <Canvas
+          shapesDetails={shapesDetails}
           setSelectedShapeId={setSelectedShapeId}
+          selectedShapeId={selectedShapeId}
           selectedTool={selectedTool}
           bgColor={bgColor}
           theme={theme}
@@ -114,10 +142,7 @@ export const CanvasPlayground = () => {
         selectedTool !== "img" &&
         selectedTool !== "mouse" &&
         selectedTool !== "eraser" && (
-          <ToolSideBar
-            selectedShapeId={selectedShapeId}
-            selectedTool={selectedTool}
-          />
+          <ToolSideBar selectedTool={selectedTool} />
         )}
       {rightSideBarOpen && <HeaderRightBar rightSideBarRef={rightSideBarRef} />}
     </>

@@ -14,46 +14,66 @@ export interface HeaderItemsProps {
   icon: ReactElement;
   label: toolType;
 }
+
+// Base types for shared properties
+type BaseShape = {
+  id: string;
+  opacity: number;
+};
+
+type PositionedShape = BaseShape & {
+  x: number;
+  y: number;
+};
+
+// Rectangle shape
+export type RectangleShape = PositionedShape & {
+  type: "rectangle";
+  width: number;
+  height: number;
+  bgColor: string;
+  strokeColor: string;
+  strokeStyle: "dashed" | "dotted" | "line";
+  borderRadius: number;
+};
+
+// Circle shape
+export type CircleShape = PositionedShape & {
+  type: "circle";
+  radius: number;
+  strokeColor: string;
+  bgColor: string;
+};
+
+// Pencil / freehand path
+export type PencilShape = BaseShape & {
+  type: "pencil";
+  path: Array<{ x: number; y: number }>;
+  strokeColor: string;
+};
+
+// Text shape
+export type TextShape = PositionedShape & {
+  type: "text";
+  input: string;
+  color: string;
+  borderColor: string;
+  font: string;
+  fontSize: string;
+};
+
+// Image shape (optional addition)
+export type ImageShape = PositionedShape & {
+  type: "img";
+  src: string;
+  width: number;
+  height: number;
+};
+
+// Union of all shape variants
 export type Shape =
-  | {
-      id: string;
-      type: "rectangle";
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      bgColor: string;
-      strokeColor: string;
-      strokeStyle: "dashed" | "dotted" | "line";
-      borderRadius: number;
-      opacity: number;
-    }
-  | {
-      id: string;
-      type: "circle";
-      x: number;
-      y: number;
-      radius: number;
-      strokeColor: string;
-      bgColor: string;
-      opacity: number;
-    }
-  | {
-      id: string;
-      type: "pencil";
-      path: { x: number; y: number }[];
-      strokeColor: string;
-      opacity: number;
-    }
-  | {
-      id: string;
-      type: "text";
-      x: number;
-      y: number;
-      input: string;
-      color: string;
-      borderColor: string;
-      opacity: number;
-      font: string;
-      fontSize: string;
-    };
+  | RectangleShape
+  | CircleShape
+  | PencilShape
+  | TextShape
+  | ImageShape;
