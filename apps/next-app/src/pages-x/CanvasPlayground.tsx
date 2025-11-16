@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { HeaderLeftBar } from "@/components/HeaderLeftBar";
 import { HeaderRightBar } from "@/components/HeaderRightBar";
 import { ToolSideBar } from "@/components/ToolSideBar";
-import { Shape, toolType } from "@/utils/types";
+import { CanvasDetailsProps, Shape } from "@/utils/types";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
@@ -15,16 +15,8 @@ export const CanvasPlayground = () => {
   // getting the theme from next-themes
   const { theme } = useTheme();
 
-  // for teacking the tool
-  const [selectedTool, setSelectedTool] = useState<toolType>("hand");
-
   // for handling selectedShapeId
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
-
-  // for handling the bg color of the canvas
-  const [bgColor, setBgColor] = useState<string>(
-    theme === "dark" ? "#121212" : "#fff"
-  );
 
   // for handling the right side bar
   const [rightSideBarOpen, setRightSideBarOpen] = useState<boolean>(false);
@@ -36,11 +28,14 @@ export const CanvasPlayground = () => {
 
   const themedColor = theme === "dark" ? "#fff" : "#000";
 
-  const [shapesDetails, setShapesDetails] = useState<Shape>({
-    // TODO: find better solution for this ts bug;
-    type: selectedTool as any,
+  const [canvasDetails, setCanvasDetails] = useState<CanvasDetailsProps>({
+    bgColor: theme === "dark" ? "#121212" : "#fff",
+    selectedTool: "hand",
+  });
 
-    bgColor: themedColor,
+  const [shapesDetails, setShapesDetails] = useState<Shape>({
+    type: canvasDetails.selectedTool as any,
+    bgColor: "",
     borderColor: themedColor,
     borderRadius: 0,
     color: themedColor,
@@ -49,14 +44,9 @@ export const CanvasPlayground = () => {
     id: uuid(),
     input: "",
     opacity: 1.0,
-    path: [{ x: 0, y: 0 }],
     radius: 1,
     strokeColor: themedColor,
     strokeStyle: "line",
-    height: 1,
-    width: 1,
-    x: 1,
-    y: 1,
   });
 
   const toggleLeftSideBar = () => {
@@ -70,8 +60,12 @@ export const CanvasPlayground = () => {
   // toggling bg color when theme changes
   useEffect(() => {
     const newBgTheme = theme === "dark" ? "#121212" : "#fff";
-    setBgColor(newBgTheme);
+    setCanvasDetails((p) => ({ ...p, bgColor: newBgTheme }));
   }, [theme]);
+
+  useEffect(() => {
+    console.log(shapesDetails);
+  }, [shapesDetails]);
 
   useEffect(() => {
     const handleCloseLeftSideBar = (event: globalThis.MouseEvent) => {
@@ -116,9 +110,12 @@ export const CanvasPlayground = () => {
   return (
     <>
       <div className="relative h-screen w-full">
-        <Header 
-          selectedTool={selectedTool}
-          setSelectedTool={setSelectedTool}
+        <Header
+          selectedTool={canvasDetails.selectedTool}
+          setSelectedTool={(e) => {
+            setCanvasDetails({ ...canvasDetails, selectedTool: e });
+            setShapesDetails({ ...shapesDetails, type: e as any });
+          }}
           handleLeftSideBar={toggleLeftSideBar}
           handleRightSideBar={toggleRightSideBar}
         />
@@ -126,23 +123,28 @@ export const CanvasPlayground = () => {
           shapesDetails={shapesDetails}
           setSelectedShapeId={setSelectedShapeId}
           selectedShapeId={selectedShapeId}
-          selectedTool={selectedTool}
-          bgColor={bgColor}
+          selectedTool={canvasDetails.selectedTool}
+          bgColor={canvasDetails.bgColor}
           theme={theme}
         />
         <Footer />
       </div>
       {leftSideBarOpen && (
         <HeaderLeftBar
-          setBgColor={setBgColor}
+          setBgColor={(newBgColor) =>
+            setCanvasDetails((p) => ({ ...p, bgColor: newBgColor }))
+          }
           leftSideBarRef={leftSideBarRef}
         />
       )}
-      {selectedTool !== "hand" &&
-        selectedTool !== "img" &&
-        selectedTool !== "mouse" &&
-        selectedTool !== "eraser" && (
-          <ToolSideBar selectedTool={selectedTool} />
+      {canvasDetails.selectedTool !== "hand" &&
+        canvasDetails.selectedTool !== "img" &&
+        canvasDetails.selectedTool !== "mouse" &&
+        canvasDetails.selectedTool !== "eraser" && (
+          <ToolSideBar
+            selectedTool={canvasDetails.selectedTool}
+            setShapesDetails={setShapesDetails}
+          />
         )}
       {rightSideBarOpen && <HeaderRightBar rightSideBarRef={rightSideBarRef} />}
     </>

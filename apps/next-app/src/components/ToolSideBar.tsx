@@ -1,11 +1,16 @@
-import { toolType } from "@/utils/types";
+import { Shape, toolType } from "@/utils/types";
 import { useTheme } from "next-themes";
+import { Dispatch, SetStateAction } from "react";
 
 interface ToolSideBarProps {
   selectedTool: toolType;
+  setShapesDetails: Dispatch<SetStateAction<Shape>>;
 }
 
-export const ToolSideBar = ({ selectedTool }: ToolSideBarProps) => {
+export const ToolSideBar = ({
+  selectedTool,
+  setShapesDetails,
+}: ToolSideBarProps) => {
   const { theme } = useTheme();
 
   const softerBackgrounds = [
@@ -44,7 +49,9 @@ export const ToolSideBar = ({ selectedTool }: ToolSideBarProps) => {
             {colorPalette.map((item) => (
               <button
                 key={item}
-                // onClick={() => setBgColor(item)}
+                onClick={() =>
+                  setShapesDetails((p) => ({ ...p, bgColor: item }))
+                }
                 style={{ backgroundColor: item }}
                 className="cursor-pointer hover:scale-[1.1] transition-transform rounded-md h-6 w-6 border border-neutral-400/30"
               />

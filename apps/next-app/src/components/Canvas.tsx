@@ -44,11 +44,9 @@ export const Canvas = ({
   };
 
   useEffect(() => {
-    console.log("am i running?");
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
-        console.log("is this running?");
         const newCanvasEngine = new CanvasEngine(
           shapesDetails,
           selectedTool,

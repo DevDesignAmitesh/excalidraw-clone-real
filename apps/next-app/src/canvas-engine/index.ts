@@ -59,6 +59,7 @@ export class CanvasEngine {
 
   renderAllTheShapes = () => {
     const allShapes = shapesStorage.getAllShapes();
+    console.log("these are the final shapes", allShapes);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     allShapes.forEach((item) => {
@@ -67,7 +68,7 @@ export class CanvasEngine {
       } else if (item.type === "pencil") {
         this.createPencil({ shape: item });
       } else if (item.type === "rectangle") {
-        this.createRect({ shape: item });
+        this.createRect({ savedShape: item });
       } else if (item.type === "text") {
         this.createText({ inputShape: item, isNew: false });
       }
@@ -137,7 +138,7 @@ export class CanvasEngine {
 
   handleMouseMove = (e: MouseEvent) => {
     if (!this.isDrawing) return;
-    console.log("mouse is moving");
+    console.log("mouse is moving", this.tool);
 
     if (this.tool === "eraser") {
       this.eraseShapeAt(e.offsetX, e.offsetY);
@@ -148,8 +149,9 @@ export class CanvasEngine {
     this.renderAllTheShapes();
 
     if (this.tool === "rectangle") {
+      console.log("are we in rectangle??");
       this.ctx.beginPath();
-      this.createRect({ e, shape: this.shapesDetails });
+      this.createRect({ e, initialShape: this.shapesDetails });
       return;
     } else if (this.tool === "circle") {
       this.ctx.beginPath();
@@ -162,9 +164,60 @@ export class CanvasEngine {
     }
   };
 
-  createRect = ({ e, shape }: { e?: MouseEvent; shape: Shape }) => {
-    console.log(shape);
-    if (shape.type === "rectangle") {
+  createRect = ({
+    e,
+    initialShape,
+    savedShape,
+  }: {
+    e?: MouseEvent;
+    initialShape?: Shape;
+    savedShape?: Shape;
+  }) => {
+    if (initialShape && e) {
+      const { type } = initialShape;
+      if (type !== "rectangle") {
+        return;
+      }
+      console.log("this is the final shape", initialShape);
+
+      const { bgColor, borderRadius, opacity, strokeColor, strokeStyle } =
+        initialShape;
+      const WIDTH = e.clientX - this.startX;
+      const HEIGHT = e.clientY - this.startY;
+      const X = this.startX;
+      const Y = this.startY;
+
+      // just for this shape
+      this.ctx.globalAlpha = opacity;
+
+      if (strokeStyle === "dashed") {
+        this.ctx.setLineDash([10, 5]); // 10px line, 5px gap
+      } else if (strokeStyle === "dotted") {
+        this.ctx.setLineDash([1, 5]); // 1px dot, 5px gap
+      } else if (strokeStyle === "line") {
+        this.ctx.setLineDash([0, 0]); // 0px dot, 0px gap
+      }
+
+      this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+
+      if (bgColor !== "") {
+        this.ctx.fillStyle = bgColor;
+        this.ctx.fill();
+      } else {
+        this.ctx.strokeStyle = strokeColor;
+        this.ctx.stroke();
+      }
+
+      // back to normal
+      this.ctx.globalAlpha = 1.0;
+
+      // Reset dashes after drawing
+      this.ctx.setLineDash([]);
+    } else if (savedShape) {
+      const { type } = savedShape;
+      if (type !== "rectangle") {
+        return;
+      }
       const {
         bgColor,
         borderRadius,
@@ -175,11 +228,11 @@ export class CanvasEngine {
         width,
         x,
         y,
-      } = shape;
-      const WIDTH = width ?? (e ? e.clientX - this.startX : 0);
-      const HEIGHT = height ?? (e ? e.clientY - this.startY : 0);
-      const X = x ?? this.startX;
-      const Y = y ?? this.startY;
+      } = savedShape;
+      const WIDTH = width!;
+      const HEIGHT = height!;
+      const X = x!;
+      const Y = y!;
 
       const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
@@ -194,16 +247,21 @@ export class CanvasEngine {
         this.ctx.setLineDash([0, 0]); // 0px dot, 0px gap
       }
 
+      this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+
       if (bgColor !== "") {
-        this.ctx.fillStyle = bgColor ?? themedColor;
-        this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+        this.ctx.fillStyle = bgColor;
+        this.ctx.fill();
       } else {
-        this.ctx.strokeStyle = strokeColor ?? themedColor;
-        this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+        this.ctx.strokeStyle = strokeColor;
+        this.ctx.stroke();
       }
 
       // back to normal
       this.ctx.globalAlpha = 1.0;
+
+      // Reset dashes after drawing
+      this.ctx.setLineDash([]);
     }
   };
 
@@ -272,10 +330,10 @@ export class CanvasEngine {
       const { opacity, path, strokeColor } = shape;
 
       this.ctx.beginPath();
-      this.ctx.moveTo(path[0].x, path[0].y);
+      this.ctx.moveTo(path![0].x, path![0].y);
 
-      for (let i = 1; i < path.length; i++) {
-        this.ctx.lineTo(path[i].x, path[i].y);
+      for (let i = 1; i < path!.length; i++) {
+        this.ctx.lineTo(path![i].x, path![i].y);
       }
 
       const themedColor = this.theme === "dark" ? "#fff" : "#000";
@@ -310,7 +368,7 @@ export class CanvasEngine {
       // for this shape
       this.ctx.globalAlpha = opacity;
       this.ctx.fillStyle = color;
-      this.ctx.fillText(input, x, y);
+      this.ctx.fillText(input, x!, y!);
 
       if (isNew) {
         shapesStorage.saveShape(inputShape);
@@ -330,18 +388,18 @@ export class CanvasEngine {
     for (const shape of allShapes) {
       if (shape.type === "rectangle") {
         if (
-          x >= shape.x &&
-          x <= shape.x + shape.width &&
-          y >= shape.y &&
-          y <= shape.y + shape.height
+          x >= shape.x! &&
+          x <= shape.x! + shape.width! &&
+          y >= shape.y! &&
+          y <= shape.y! + shape.height!
         ) {
           shapesStorage.deleteShape(shape.id);
         }
       }
 
       if (shape.type === "circle") {
-        const dx = x - shape.x;
-        const dy = y - shape.y;
+        const dx = x - shape.x!;
+        const dy = y - shape.y!;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= (shape.radius ?? 0)) {
           shapesStorage.deleteShape(shape.id);
@@ -369,8 +427,8 @@ export class CanvasEngine {
         this.ctx.font = "20px serif"; // use same font as when you draw it
         const textWidth = this.ctx.measureText(shape.input).width;
         const textHeight = 20; // approximate text height
-        const withinX = x >= shape.x && x <= shape.x + textWidth;
-        const withinY = y >= shape.y - textHeight && y <= shape.y;
+        const withinX = x >= shape.x! && x <= shape.x! + textWidth;
+        const withinY = y >= shape.y! - textHeight && y <= shape.y!;
         if (withinX && withinY) {
           shapesStorage.deleteShape(shape.id);
           continue;
@@ -392,10 +450,10 @@ export class CanvasEngine {
     for (const shape of allShapes) {
       if (shape.type === "rectangle") {
         if (
-          x >= shape.x &&
-          x <= shape.x + shape.width &&
-          y >= shape.y &&
-          y <= shape.y + shape.height
+          x >= shape.x! &&
+          x <= shape.x! + shape.width! &&
+          y >= shape.y! &&
+          y <= shape.y! + shape.height!
         ) {
           this.setSelectedShapeId(shape.id);
           shapesStorage.updateShape(shape.id, {
@@ -408,8 +466,8 @@ export class CanvasEngine {
       }
 
       if (shape.type === "circle") {
-        const dx = x - shape.x;
-        const dy = y - shape.y;
+        const dx = x - shape.x!;
+        const dy = y - shape.y!;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= (shape.radius ?? 0)) {
           this.setSelectedShapeId(shape.id);
@@ -449,8 +507,8 @@ export class CanvasEngine {
         this.ctx.font = "20px serif"; // use same font as when you draw it
         const textWidth = this.ctx.measureText(shape.input).width;
         const textHeight = 20; // approximate text height
-        const withinX = x >= shape.x && x <= shape.x + textWidth;
-        const withinY = y >= shape.y - textHeight && y <= shape.y;
+        const withinX = x >= shape.x! && x <= shape.x! + textWidth;
+        const withinY = y >= shape.y! - textHeight && y <= shape.y!;
         if (withinX && withinY) {
           this.setSelectedShapeId(shape.id);
           shapesStorage.updateShape(shape.id, {

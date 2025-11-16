@@ -22,15 +22,15 @@ type BaseShape = {
 };
 
 type PositionedShape = BaseShape & {
-  x: number;
-  y: number;
+  x?: number;
+  y?: number;
 };
 
 // Rectangle shape
 export type RectangleShape = PositionedShape & {
   type: "rectangle";
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   bgColor: string;
   strokeColor: string;
   strokeStyle: "dashed" | "dotted" | "line";
@@ -40,7 +40,7 @@ export type RectangleShape = PositionedShape & {
 // Circle shape
 export type CircleShape = PositionedShape & {
   type: "circle";
-  radius: number;
+  radius?: number;
   strokeColor: string;
   bgColor: string;
 };
@@ -48,7 +48,7 @@ export type CircleShape = PositionedShape & {
 // Pencil / freehand path
 export type PencilShape = BaseShape & {
   type: "pencil";
-  path: Array<{ x: number; y: number }>;
+  path?: Array<{ x: number; y: number }>;
   strokeColor: string;
 };
 
@@ -77,3 +77,8 @@ export type Shape =
   | PencilShape
   | TextShape
   | ImageShape;
+
+export interface CanvasDetailsProps {
+  bgColor: string;
+  selectedTool: toolType;
+}
