@@ -13,7 +13,7 @@ import { v4 as uuid } from "uuid";
 
 export const CanvasPlayground = () => {
   // getting the theme from next-themes
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   // for handling selectedShapeId
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
@@ -64,10 +64,6 @@ export const CanvasPlayground = () => {
   }, [theme]);
 
   useEffect(() => {
-    console.log(shapesDetails);
-  }, [shapesDetails]);
-
-  useEffect(() => {
     const handleCloseLeftSideBar = (event: globalThis.MouseEvent) => {
       const target = event.target as Node | null;
       if (
@@ -107,6 +103,13 @@ export const CanvasPlayground = () => {
       window.removeEventListener("keydown", handleCloseSideBarWithEscape);
     };
   }, [leftSideBarOpen, rightSideBarOpen]);
+
+  // just to ensure that theme is not empty on the first render
+  useEffect(() => {
+    const storedTheme = localStorage.theme || "light";
+    document.documentElement.classList.add(storedTheme);
+    setTheme(storedTheme);
+  }, []);
   return (
     <>
       <div className="relative h-screen w-full">
@@ -145,7 +148,7 @@ export const CanvasPlayground = () => {
             selectedTool={canvasDetails.selectedTool}
             setShapesDetails={setShapesDetails}
           />
-        )}
+      )}
       {rightSideBarOpen && <HeaderRightBar rightSideBarRef={rightSideBarRef} />}
     </>
   );

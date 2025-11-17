@@ -38,7 +38,9 @@ export const Canvas = ({
   }, [input]); // run whenever we create a new text input
 
   const handleBlur = () => {
+    console.log("is this running");
     if (!input) return;
+    console.log("is this running? what about now");
     canvasEngine.current?.createText({ inputShape: input, isNew: true });
     setInput(null);
   };
@@ -79,14 +81,18 @@ export const Canvas = ({
         height={window.innerHeight}
         width={window.innerWidth}
         style={{ backgroundColor: bgColor }}
-        onClick={(e) => {
-          if (input?.type === "text") {
+        onDoubleClick={(e) => {
+          const rect = canvasRef.current!.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          console.log("we are gonna add text");
+          if (selectedTool === "text") {
             setInput({
               id: uuid(),
               type: "text",
               input: "",
-              x: e.clientX,
-              y: e.clientY,
+              x,
+              y,
               opacity: 100,
               color: themedColor,
               borderColor: themedColor,
@@ -106,8 +112,8 @@ export const Canvas = ({
           style={{
             top: input.y,
             left: input.x,
-            color: input.color,
-            borderColor: input.borderColor,
+            color: themedColor,
+            borderColor: themedColor,
             boxSizing: "content-box",
             position: "absolute",
             transform: "translate(-50%, -50%)",

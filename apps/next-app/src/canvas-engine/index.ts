@@ -36,7 +36,6 @@ export class CanvasEngine {
   }
 
   startFn = () => {
-    console.log("we are getting started");
     this.canvas.addEventListener("mouseup", this.handleMouseUp);
     this.canvas.addEventListener("mousemove", this.handleMouseMove);
     this.canvas.addEventListener("mousedown", this.handleMouseDown);
@@ -52,21 +51,19 @@ export class CanvasEngine {
 
   handleClick = (e: PointerEvent) => {
     if (this.tool === "hand") {
-      console.log("clicked");
       this.selectShapeAt(e.clientX, e.clientY);
     }
   };
 
   renderAllTheShapes = () => {
     const allShapes = shapesStorage.getAllShapes();
-    console.log("these are the final shapes", allShapes);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     allShapes.forEach((item) => {
       if (item.type === "circle") {
-        this.createCircle({ shape: item });
+        this.createCircle({ savedShape: item });
       } else if (item.type === "pencil") {
-        this.createPencil({ shape: item });
+        this.createPencil({ savedShape: item });
       } else if (item.type === "rectangle") {
         this.createRect({ savedShape: item });
       } else if (item.type === "text") {
@@ -127,39 +124,46 @@ export class CanvasEngine {
       shape = {
         id: uuid(),
         type: "pencil",
-        path: this.shapesDetails.path,
+        path: this.pencilPath,
         opacity: this.shapesDetails.opacity,
         strokeColor: this.shapesDetails.strokeColor,
       };
     }
-
-    if (shape) shapesStorage.saveShape(shape);
+    console.log("this is the final shape after mouse up", shape);
+    if (shape) {
+      shapesStorage.saveShape(shape);
+      this.renderAllTheShapes();
+    }
   };
 
   handleMouseMove = (e: MouseEvent) => {
     if (!this.isDrawing) return;
-    console.log("mouse is moving", this.tool);
+
+    const rect = this.canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
 
     if (this.tool === "eraser") {
-      this.eraseShapeAt(e.offsetX, e.offsetY);
+      this.eraseShapeAt(x, y);
       return;
     }
 
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.renderAllTheShapes();
 
     if (this.tool === "rectangle") {
-      console.log("are we in rectangle??");
       this.ctx.beginPath();
       this.createRect({ e, initialShape: this.shapesDetails });
       return;
     } else if (this.tool === "circle") {
       this.ctx.beginPath();
-      this.createCircle({ e, shape: this.shapesDetails });
+      this.createCircle({ e, initialShape: this.shapesDetails });
       return;
     } else if (this.tool === "pencil") {
       this.pencilPath.push({ x: e.offsetX, y: e.offsetY });
-      this.createPencil({ path: this.pencilPath, shape: this.shapesDetails });
+      this.createPencil({
+        path: this.pencilPath,
+        initialShape: this.shapesDetails,
+      });
       return;
     }
   };
@@ -178,7 +182,6 @@ export class CanvasEngine {
       if (type !== "rectangle") {
         return;
       }
-      console.log("this is the final shape", initialShape);
 
       const { bgColor, borderRadius, opacity, strokeColor, strokeStyle } =
         initialShape;
@@ -186,6 +189,8 @@ export class CanvasEngine {
       const HEIGHT = e.clientY - this.startY;
       const X = this.startX;
       const Y = this.startY;
+
+      const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
       // just for this shape
       this.ctx.globalAlpha = opacity;
@@ -201,10 +206,19 @@ export class CanvasEngine {
       this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
 
       if (bgColor !== "") {
-        this.ctx.fillStyle = bgColor;
+        if (bgColor !== "#fff" && bgColor !== "#000") {
+          this.ctx.fillStyle = bgColor;
+        } else {
+          this.ctx.fillStyle = themedColor;
+        }
+
         this.ctx.fill();
       } else {
-        this.ctx.strokeStyle = strokeColor;
+        if (strokeColor !== "#fff" && strokeColor !== "#000") {
+          this.ctx.strokeStyle = strokeColor;
+        }
+
+        this.ctx.strokeStyle = themedColor;
         this.ctx.stroke();
       }
 
@@ -250,10 +264,19 @@ export class CanvasEngine {
       this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
 
       if (bgColor !== "") {
-        this.ctx.fillStyle = bgColor;
+        if (bgColor !== "#fff" && bgColor !== "#000") {
+          this.ctx.fillStyle = bgColor;
+        } else {
+          this.ctx.fillStyle = themedColor;
+        }
+
         this.ctx.fill();
       } else {
-        this.ctx.strokeStyle = strokeColor;
+        if (strokeColor !== "#fff" && strokeColor !== "#000") {
+          this.ctx.strokeStyle = strokeColor;
+        }
+
+        this.ctx.strokeStyle = themedColor;
         this.ctx.stroke();
       }
 
@@ -265,42 +288,99 @@ export class CanvasEngine {
     }
   };
 
-  createCircle = ({ e, shape }: { e?: MouseEvent; shape: Shape }) => {
-    if (shape.type === "circle") {
-      const { bgColor, opacity, radius, strokeColor, x, y } = shape;
-      const dx = e ? e.clientX - this.startX : 0;
-      const dy = e ? e.clientY - this.startY : 0;
-      const r = radius ?? Math.sqrt(dx * dx + dy * dy);
-      const X = x ?? this.startX;
-      const Y = y ?? this.startY;
+  createCircle = ({
+    e,
+    initialShape,
+    savedShape,
+  }: {
+    e?: MouseEvent;
+    initialShape?: Shape;
+    savedShape?: Shape;
+  }) => {
+    if (initialShape && e) {
+      console.log("this is the initial shape", initialShape);
+      if (initialShape.type === "circle") {
+        const { bgColor, opacity, strokeColor } = initialShape;
+        const dx = e.clientX - this.startX;
+        const dy = e.clientY - this.startY;
+        const r = Math.sqrt(dx * dx + dy * dy);
+        const X = this.startX;
+        const Y = this.startY;
 
-      const themedColor = this.theme === "dark" ? "#fff" : "#000";
-      this.ctx.beginPath();
-      // for just this shape
-      this.ctx.globalAlpha = opacity;
-      if (bgColor !== "") {
+        const themedColor = this.theme === "dark" ? "#fff" : "#000";
+        this.ctx.beginPath();
+        // for just this shape
+        this.ctx.globalAlpha = opacity;
         this.ctx.arc(X, Y, r, 0, 2 * Math.PI);
-        this.ctx.fillStyle = bgColor ?? themedColor;
-        this.ctx.fill();
-      } else {
-        this.ctx.strokeStyle = strokeColor ?? themedColor;
-        this.ctx.stroke();
+
+        if (bgColor !== "") {
+          if (bgColor !== "#fff" && bgColor !== "#000") {
+            this.ctx.fillStyle = bgColor;
+          } else {
+            this.ctx.fillStyle = themedColor;
+          }
+          this.ctx.fill();
+        } else {
+          if (strokeColor !== "#fff" && strokeColor !== "#000") {
+            this.ctx.strokeStyle = strokeColor;
+          } else {
+            this.ctx.strokeStyle = themedColor;
+          }
+          this.ctx.stroke();
+        }
+        // 0.0 to 1.0
+        this.ctx.globalAlpha = 1.0;
       }
-      // 0.0 to 1.0
-      this.ctx.globalAlpha = 1.0;
+    } else if (savedShape) {
+      if (savedShape.type === "circle") {
+        console.log(
+          "this is the circle shape which is gonna rendered",
+          savedShape
+        );
+        const { bgColor, opacity, strokeColor, radius, x, y } = savedShape;
+        const r = radius!;
+        const X = x!;
+        const Y = y!;
+
+        const themedColor = this.theme === "dark" ? "#fff" : "#000";
+        this.ctx.beginPath();
+        // for just this shape
+        this.ctx.globalAlpha = opacity;
+        this.ctx.arc(X, Y, r, 0, 2 * Math.PI);
+
+        if (bgColor !== "") {
+          if (bgColor !== "#fff" && bgColor !== "#000") {
+            this.ctx.fillStyle = bgColor;
+          } else {
+            this.ctx.fillStyle = themedColor;
+          }
+          this.ctx.fill();
+        } else {
+          if (strokeColor !== "#fff" && strokeColor !== "#000") {
+            this.ctx.strokeStyle = strokeColor;
+          } else {
+            this.ctx.strokeStyle = themedColor;
+          }
+          this.ctx.stroke();
+        }
+        // 0.0 to 1.0
+        this.ctx.globalAlpha = 1.0;
+      }
     }
   };
 
   createPencil = ({
     path,
-    shape,
+    savedShape,
+    initialShape,
   }: {
     path?: { x: number; y: number }[];
-    shape: Shape;
+    initialShape?: Shape;
+    savedShape?: Shape;
   }) => {
-    if (path) {
-      if (shape.type === "pencil") {
-        const { opacity, strokeColor } = shape;
+    if (path && initialShape) {
+      if (initialShape.type === "pencil") {
+        const { opacity, strokeColor } = initialShape;
 
         this.ctx.beginPath();
         this.ctx.moveTo(path[0].x, path[0].y);
@@ -311,45 +391,53 @@ export class CanvasEngine {
 
         const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
-        this.ctx.strokeStyle = strokeColor ?? themedColor;
+        if (strokeColor !== "#fff" && strokeColor !== "#000") {
+          this.ctx.strokeStyle = strokeColor;
+        } else {
+          this.ctx.strokeStyle = themedColor;
+        }
         this.ctx.lineWidth = 2;
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
 
         // for this shape only
         this.ctx.globalAlpha = opacity;
-        this.ctx.strokeStyle = this.theme === "dark" ? "#fff" : "#000";
         this.ctx.stroke();
 
         // reseting it for rest of the images
         this.ctx.globalAlpha = 1.0;
       }
       return;
-    }
-    if (shape.type === "pencil") {
-      const { opacity, path, strokeColor } = shape;
+    } else if (savedShape) {
+      if (savedShape.type === "pencil" && savedShape.path) {
+        const { opacity, path, strokeColor } = savedShape;
 
-      this.ctx.beginPath();
-      this.ctx.moveTo(path![0].x, path![0].y);
+        this.ctx.beginPath();
+        this.ctx.moveTo(path[0].x, path[0].y);
 
-      for (let i = 1; i < path!.length; i++) {
-        this.ctx.lineTo(path![i].x, path![i].y);
+        for (let i = 1; i < path!.length; i++) {
+          this.ctx.lineTo(path[i].x, path[i].y);
+        }
+
+        const themedColor = this.theme === "dark" ? "#fff" : "#000";
+
+        if (strokeColor !== "#fff" && strokeColor !== "#000") {
+          this.ctx.strokeStyle = strokeColor;
+        } else {
+          this.ctx.strokeStyle = themedColor;
+        }
+
+        this.ctx.lineWidth = 2;
+        this.ctx.lineCap = "round";
+        this.ctx.lineJoin = "round";
+
+        // for this shape only
+        this.ctx.globalAlpha = opacity;
+        this.ctx.stroke();
+
+        // reseting it for rest of the images
+        this.ctx.globalAlpha = 1.0;
       }
-
-      const themedColor = this.theme === "dark" ? "#fff" : "#000";
-
-      this.ctx.strokeStyle = strokeColor ?? themedColor;
-      this.ctx.lineWidth = 2;
-      this.ctx.lineCap = "round";
-      this.ctx.lineJoin = "round";
-
-      // for this shape only
-      this.ctx.globalAlpha = opacity;
-      this.ctx.strokeStyle = this.theme === "dark" ? "#fff" : "#000";
-      this.ctx.stroke();
-
-      // reseting it for rest of the images
-      this.ctx.globalAlpha = 1.0;
     }
   };
 
@@ -367,7 +455,14 @@ export class CanvasEngine {
 
       // for this shape
       this.ctx.globalAlpha = opacity;
-      this.ctx.fillStyle = color;
+
+      const themedColor = this.theme === "dark" ? "#fff" : "#000";
+
+      if (color !== "#fff" && color !== "#000") {
+        this.ctx.fillStyle = color;
+      } else {
+        this.ctx.fillStyle = themedColor;
+      }
       this.ctx.fillText(input, x!, y!);
 
       if (isNew) {
@@ -383,6 +478,7 @@ export class CanvasEngine {
   eraseShapeAt = (x: number, y: number) => {
     const allShapes = shapesStorage.getAllShapes();
     const ERASER_RADIUS = 10; // can tweak this for comfort
+    const deletedShapeIds: string[] = []; // for stroing the deleted shapes's ids
 
     // simple hit detection for each shape
     for (const shape of allShapes) {
@@ -393,7 +489,7 @@ export class CanvasEngine {
           y >= shape.y! &&
           y <= shape.y! + shape.height!
         ) {
-          shapesStorage.deleteShape(shape.id);
+          deletedShapeIds.push(shape.id);
         }
       }
 
@@ -402,7 +498,7 @@ export class CanvasEngine {
         const dy = y - shape.y!;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= (shape.radius ?? 0)) {
-          shapesStorage.deleteShape(shape.id);
+          deletedShapeIds.push(shape.id);
         }
       }
 
@@ -417,7 +513,7 @@ export class CanvasEngine {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist <= ERASER_RADIUS) {
-            shapesStorage.deleteShape(shape.id);
+            deletedShapeIds.push(shape.id);
             break;
           }
         }
@@ -430,14 +526,14 @@ export class CanvasEngine {
         const withinX = x >= shape.x! && x <= shape.x! + textWidth;
         const withinY = y >= shape.y! - textHeight && y <= shape.y!;
         if (withinX && withinY) {
-          shapesStorage.deleteShape(shape.id);
+          deletedShapeIds.push(shape.id);
           continue;
         }
       }
     }
 
     // re-render after deletion
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    deletedShapeIds.forEach((id) => shapesStorage.deleteShape(id));
     this.renderAllTheShapes();
   };
 
@@ -445,7 +541,6 @@ export class CanvasEngine {
     const allShapes = shapesStorage.getAllShapes();
     const ERASER_RADIUS = 10; // can tweak this for comfort
 
-    console.log(x, y);
     // simple hit detection for each shape
     for (const shape of allShapes) {
       if (shape.type === "rectangle") {
