@@ -1,5 +1,4 @@
 import { Shape, toolType } from "@/utils/types";
-import { useTheme } from "next-themes";
 import { Dispatch, SetStateAction } from "react";
 
 interface ToolSideBarProps {
@@ -11,27 +10,25 @@ export const ToolSideBar = ({
   selectedTool,
   setShapesDetails,
 }: ToolSideBarProps) => {
-  const { theme } = useTheme();
-
   const softerBackgrounds = [
-    "#F8FAFC", // lightest gray
-    "#E2E8F0",
-    "#CBD5E1",
+    "#000",
+    "#e03131",
+    "#2f9e44",
     "#F9E2AF",
     "#FECACA",
     "#E9D5FF",
   ];
 
-  const darkerBackrounds = [
-    "#0F172A", // slate-900
-    "#1E293B",
-    "#334155",
-    "#3F3F46",
-    "#4338CA",
-    "#DB2777",
+  const backroundColors = [
+    "",
+    "#e0313188",
+    "#2f9e4488",
+    "#1971c288",
+    "#f08c0088",
   ];
+  const strokeColors = ["#fff", "#e03131", "#2f9e44", "#1971c2", "#f08c00"];
 
-  const colorPalette = theme === "light" ? softerBackgrounds : darkerBackrounds;
+  const colorPalette = softerBackgrounds;
 
   return (
     <div
@@ -46,13 +43,14 @@ export const ToolSideBar = ({
             Background color
           </p>
           <div className="flex flex-wrap gap-2">
-            {colorPalette.map((item) => (
+            {backroundColors.map((item) => (
               <button
+                title={item === "" ? "transparent" : item}
                 key={item}
                 onClick={() =>
                   setShapesDetails((p) => ({ ...p, bgColor: item }))
                 }
-                style={{ backgroundColor: item }}
+                style={{ backgroundColor: item === "" ? "transparent" : item }}
                 className="cursor-pointer hover:scale-[1.1] transition-transform rounded-md h-6 w-6 border border-neutral-400/30"
               />
             ))}
@@ -66,10 +64,9 @@ export const ToolSideBar = ({
           {selectedTool === "text" ? "Font" : "Stroke"} color
         </p>
         <div className="flex flex-wrap gap-2">
-          {colorPalette.map((item) => (
+          {strokeColors.map((item) => (
             <button
               key={item}
-              // onClick={() => setStrokeColor(item)}
               style={{ backgroundColor: item }}
               className="cursor-pointer hover:scale-[1.1] transition-transform rounded-md h-6 w-6 border border-neutral-400/30"
             />
@@ -140,11 +137,11 @@ export const ToolSideBar = ({
         </section>
       )}
 
-      {/* Round Stroke (Hidden for Circle) */}
+      {/* Border Radius */}
       {selectedTool !== "circle" && selectedTool !== "text" && (
         <section className="flex flex-col w-full gap-2">
           <p className="text-sm font-medium capitalize opacity-80">
-            Round stroke
+            Border Radius
           </p>
           <div className="flex justify-start items-center gap-3">
             {["4px", "8px", "12px"].map((item) => (

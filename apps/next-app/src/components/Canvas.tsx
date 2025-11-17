@@ -1,14 +1,15 @@
 import { CanvasEngine } from "@/canvas-engine";
 import { Shape, toolType } from "@/utils/types";
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
 interface CanvasProps {
   selectedTool: toolType;
+  setSelectedTool: (e: toolType) => void;
   shapesDetails: Shape;
-  setSelectedShapeId: (input: string | null) => void;
-  selectedShapeId: string | null;
   bgColor: string;
+  selectedShapeId: string | null;
+  setSelectedShapeId: Dispatch<SetStateAction<string | null>>;
   theme: string | undefined;
 }
 
@@ -17,8 +18,9 @@ export const Canvas = ({
   selectedTool,
   bgColor,
   theme,
-  setSelectedShapeId,
+  setSelectedTool,
   selectedShapeId,
+  setSelectedShapeId,
 }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasEngine = useRef<CanvasEngine | null>(null);
@@ -38,11 +40,15 @@ export const Canvas = ({
   }, [input]); // run whenever we create a new text input
 
   const handleBlur = () => {
-    console.log("is this running");
-    if (!input) return;
+    if (!input || input.type !== "text" || input.input === "") {
+      setInput(null);
+      setSelectedTool("mouse");
+      return;
+    }
     console.log("is this running? what about now");
     canvasEngine.current?.createText({ inputShape: input, isNew: true });
     setInput(null);
+    setSelectedTool("mouse");
   };
 
   useEffect(() => {
@@ -52,9 +58,11 @@ export const Canvas = ({
         const newCanvasEngine = new CanvasEngine(
           shapesDetails,
           selectedTool,
+          setSelectedTool,
+          selectedShapeId,
+          setSelectedShapeId,
           theme,
           themedColor,
-          setSelectedShapeId,
           canvasRef.current,
           ctx
         );
@@ -65,14 +73,7 @@ export const Canvas = ({
     return () => {
       canvasEngine.current?.endFn();
     };
-  }, [
-    selectedTool,
-    theme,
-    themedColor,
-    shapesDetails,
-    canvasRef,
-    selectedShapeId,
-  ]);
+  }, [selectedTool, theme, themedColor, shapesDetails, canvasRef]);
 
   return (
     <>
@@ -85,23 +86,19 @@ export const Canvas = ({
           const rect = canvasRef.current!.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
-          console.log("we are gonna add text");
-          if (selectedTool === "text") {
-            setInput({
-              id: uuid(),
-              type: "text",
-              input: "",
-              x,
-              y,
-              opacity: 100,
-              color: themedColor,
-              borderColor: themedColor,
-              font: "serif",
-              fontSize: "24px",
-            });
-          } else {
-            setInput(null);
-          }
+          setSelectedTool("text");
+          setInput({
+            id: uuid(),
+            type: "text",
+            input: "",
+            x,
+            y,
+            opacity: 100,
+            color: themedColor,
+            borderColor: themedColor,
+            font: "serif",
+            fontSize: "24px",
+          });
         }}
       />
       {input && input.type === "text" && (

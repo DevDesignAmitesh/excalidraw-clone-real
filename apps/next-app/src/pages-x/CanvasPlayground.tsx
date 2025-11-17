@@ -20,7 +20,6 @@ export const CanvasPlayground = () => {
 
   // for handling the right side bar
   const [rightSideBarOpen, setRightSideBarOpen] = useState<boolean>(false);
-  const rightSideBarRef = useRef<HTMLDivElement>(null);
 
   // for handling the left side bar
   const [leftSideBarOpen, setLeftSideBarOpen] = useState<boolean>(false);
@@ -75,32 +74,26 @@ export const CanvasPlayground = () => {
       }
     };
 
-    const handleCloseRightSideBar = (event: globalThis.MouseEvent) => {
-      const target = event.target as Node | null;
-      if (
-        rightSideBarOpen &&
-        rightSideBarRef.current &&
-        !rightSideBarRef.current.contains(target)
-      ) {
-        setRightSideBarOpen(false);
+    const handleCloseLeftSideBarWithEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLeftSideBarOpen(false);
       }
     };
 
-    const handleCloseSideBarWithEscape = (event: KeyboardEvent) => {
+    const handleCloseRightSideBarWithEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setLeftSideBarOpen(false);
         setRightSideBarOpen(false);
       }
     };
 
     window.addEventListener("mousedown", handleCloseLeftSideBar);
-    window.addEventListener("mousedown", handleCloseRightSideBar);
-    window.addEventListener("keydown", handleCloseSideBarWithEscape);
+    window.addEventListener("keydown", handleCloseLeftSideBarWithEscape);
+    window.addEventListener("keydown", handleCloseRightSideBarWithEscape);
 
     return () => {
       window.removeEventListener("mousedown", handleCloseLeftSideBar);
-      window.removeEventListener("mousedown", handleCloseRightSideBar);
-      window.removeEventListener("keydown", handleCloseSideBarWithEscape);
+      window.removeEventListener("keydown", handleCloseLeftSideBarWithEscape);
+      window.removeEventListener("keydown", handleCloseRightSideBarWithEscape);
     };
   }, [leftSideBarOpen, rightSideBarOpen]);
 
@@ -127,6 +120,9 @@ export const CanvasPlayground = () => {
           setSelectedShapeId={setSelectedShapeId}
           selectedShapeId={selectedShapeId}
           selectedTool={canvasDetails.selectedTool}
+          setSelectedTool={(e) =>
+            setCanvasDetails((p) => ({ ...p, selectedTool: e }))
+          }
           bgColor={canvasDetails.bgColor}
           theme={theme}
         />
@@ -140,16 +136,19 @@ export const CanvasPlayground = () => {
           leftSideBarRef={leftSideBarRef}
         />
       )}
-      {canvasDetails.selectedTool !== "hand" &&
+      {((canvasDetails.selectedTool !== "hand" &&
         canvasDetails.selectedTool !== "img" &&
         canvasDetails.selectedTool !== "mouse" &&
-        canvasDetails.selectedTool !== "eraser" && (
-          <ToolSideBar
-            selectedTool={canvasDetails.selectedTool}
-            setShapesDetails={setShapesDetails}
-          />
+        canvasDetails.selectedTool !== "eraser") ||
+        selectedShapeId !== null) && (
+        <ToolSideBar
+          selectedTool={canvasDetails.selectedTool}
+          setShapesDetails={setShapesDetails}
+        />
       )}
-      {rightSideBarOpen && <HeaderRightBar rightSideBarRef={rightSideBarRef} />}
+      {rightSideBarOpen && (
+        <HeaderRightBar setRightSideBarOpen={setRightSideBarOpen} />
+      )}
     </>
   );
 };

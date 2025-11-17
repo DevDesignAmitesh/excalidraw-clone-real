@@ -42,7 +42,7 @@ export const HeaderLeftBar = ({
   return (
     <div
       ref={leftSideBarRef}
-      className="absolute left-5 top-1/2 -translate-y-1/2 dark:text-neutral-200 text-neutral-700 dark:bg-[#232329] bg-[#ececf8] 
+      className="absolute left-5 top-1/2 -translate-y-1/2 dark:text-neutral-200 text-neutral-700 dark:bg-[#232329] bg-[#ececf8] z-500
       flex flex-col justify-start items-center rounded-md w-[230px] h-[530px]"
     >
       <div className="h-full overflow-y-auto w-full px-2">

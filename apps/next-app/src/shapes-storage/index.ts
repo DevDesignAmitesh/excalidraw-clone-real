@@ -21,9 +21,11 @@ class ShapesStorage {
       const filterdShapes = allShapes.filter(
         (item) => item.id !== wantToUpdate.id
       );
-      const updatedShape = { ...wantToUpdate, shape };
+      const updatedShape = { ...wantToUpdate, ...shape } as Shape;
+
+      console.log("this is the updted shape", updatedShape);
       filterdShapes.push(updatedShape);
-      localStorage.setItem(`shapes`, JSON.stringify(allShapes));
+      localStorage.setItem(`shapes`, JSON.stringify(filterdShapes));
     }
   }
 
