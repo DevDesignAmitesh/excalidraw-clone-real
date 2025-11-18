@@ -23,7 +23,6 @@ class ShapesStorage {
       );
       const updatedShape = { ...wantToUpdate, ...shape } as Shape;
 
-      console.log("this is the updted shape", updatedShape);
       filterdShapes.push(updatedShape);
       localStorage.setItem(`shapes`, JSON.stringify(filterdShapes));
     }

@@ -19,6 +19,7 @@ export interface HeaderItemsProps {
 type BaseShape = {
   id: string;
   opacity: number;
+  isSelected?: boolean;
 };
 
 type PositionedShape = BaseShape & {

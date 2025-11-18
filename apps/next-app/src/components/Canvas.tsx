@@ -45,7 +45,6 @@ export const Canvas = ({
       setSelectedTool("mouse");
       return;
     }
-    console.log("is this running? what about now");
     canvasEngine.current?.createText({ inputShape: input, isNew: true });
     setInput(null);
     setSelectedTool("mouse");
@@ -60,7 +59,6 @@ export const Canvas = ({
           selectedTool,
           setSelectedTool,
           selectedShapeId,
-          setSelectedShapeId,
           theme,
           themedColor,
           canvasRef.current,
@@ -74,6 +72,18 @@ export const Canvas = ({
       canvasEngine.current?.endFn();
     };
   }, [selectedTool, theme, themedColor, shapesDetails, canvasRef]);
+
+  const autosizeText = () => {
+    if (!inputRef.current) return;
+    inputRef.current.style.height = "auto";
+    inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+    inputRef.current.style.width = "auto";
+    inputRef.current.style.width = inputRef.current.scrollWidth + "px";
+  };
+
+  useEffect(() => {
+    autosizeText();
+  }, [input]);
 
   return (
     <>
@@ -97,28 +107,44 @@ export const Canvas = ({
             color: themedColor,
             borderColor: themedColor,
             font: "serif",
-            fontSize: "24px",
+            fontSize: "24",
           });
         }}
       />
       {input && input.type === "text" && (
         <textarea
           ref={inputRef}
-          className="absolute z-50 border rounded-md p-2 w-40"
-          placeholder="Enter text"
+          autoFocus
+          className="absolute z-50 resize-none outline-none bg-transparent"
           style={{
             top: input.y,
             left: input.x,
-            color: themedColor,
-            borderColor: themedColor,
-            boxSizing: "content-box",
             position: "absolute",
             transform: "translate(-50%, -50%)",
+
+            // Typography from shape
+            color: themedColor,
             fontFamily: input.font,
-            fontSize: input.fontSize,
+            fontSize: `${input.fontSize}px`,
+            lineHeight: "1.2",
+
+            // Auto sizing tricks
+            overflow: "hidden",
+            whiteSpace: "pre-wrap",
+            minWidth: "20px",
+            minHeight: "10px",
+
+            // Remove default ui
+            border: "none",
+            boxShadow: "none",
+            padding: "0px",
+            backgroundColor: "transparent",
           }}
           value={input.input}
-          onChange={(e) => setInput({ ...input, input: e.target.value })}
+          onChange={(e) => {
+            setInput({ ...input, input: e.target.value });
+            autosizeText();
+          }}
           onBlur={handleBlur}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
