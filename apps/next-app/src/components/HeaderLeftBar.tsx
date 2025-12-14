@@ -10,9 +10,25 @@ interface HeaderLefBarProps {
   setBgColor: (input: string) => void;
 }
 
-export const HeaderLeftBar = ({ 
-  leftSideBarRef, 
-  setBgColor, 
+const softerBackgrounds = [
+  "#CFCFCF",
+  "#BDBFC2",
+  "#AEB0B4",
+  "#BEBBAA",
+  "#C2BBB8",
+];
+
+const darkerBackrounds = [
+  "#121212",
+  "#161718",
+  "#13171C",
+  "#181605",
+  "#1B1615",
+];
+
+export const HeaderLeftBar = ({
+  leftSideBarRef,
+  setBgColor,
 }: HeaderLefBarProps) => {
   const { setTheme, theme } = useTheme();
 
@@ -37,8 +53,6 @@ export const HeaderLeftBar = ({
     localStorage.theme = "light";
   };
 
-  const softerBackgrounds = ["#CFCFCF", "#BDBFC2", "#AEB0B4", "#BEBBAA", "#C2BBB8"];
-  const darkerBackrounds = ["#121212", "#161718", "#13171C", "#181605", "#1B1615"];
   return (
     <div
       ref={leftSideBarRef}
@@ -90,31 +104,30 @@ export const HeaderLeftBar = ({
             <MdOutlineDarkMode
               onClick={toggleThemeToDark}
               size={34}
-              className={` cursor-pointer ${theme === "dark" ? "dark:bg-[#232329] bg-[#ececf8]" : "dark:hover:bg-[#3a3a4a] hover:bg-neutral-100 dark:bg-[#232329] bg-[#ececf8]"} rounded-md p-2 dark:text-neutral-200 text-neutral-700`}
+              className={`cursor-pointer rounded-md p-2`}
             />
             <FiSun
               onClick={toggleThemeToLight}
               size={34}
-              className={`cursor-pointer ${theme === "light" ? "dark:bg-[#232329] bg-[#ececf8]" : "dark:hover:bg-[#3a3a4a] hover:bg-neutral-100 dark:bg-[#232329] bg-[#ececf8]"} rounded-md p-2 dark:text-neutral-200 text-neutral-700`}
+              className={`cursor-pointer rounded-md p-2`}
             />
           </div>
         </div>
         <div className="flex flex-col justify-center items-start w-full gap-2">
           <p className="text-sm capitalize">canvas background</p>
           <div className="flex justify-center items-center gap-2">
-            {(theme === "light" ?  softerBackgrounds : darkerBackrounds).map(
+            {(theme === "light" ? softerBackgrounds : darkerBackrounds).map(
               (item) => (
                 <p
                   onClick={() => setBgColor(item)}
                   key={item}
-                    style={{
-                      backgroundColor: item,
-                    }}
+                  style={{
+                    backgroundColor: item,
+                  }}
                   className={`cursor-pointer hover:scale-[1.1] transition-all rounded-md p-2 text-neutral-200 h-8 w-8`}
                 />
               )
-              )
-            }
+            )}
           </div>
         </div>
       </div>

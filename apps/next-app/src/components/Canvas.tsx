@@ -22,13 +22,17 @@ export const Canvas = ({
   selectedShapeId,
   setSelectedShapeId,
 }: CanvasProps) => {
+  if (typeof window === "undefined" || !theme) return null;
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasEngine = useRef<CanvasEngine | null>(null);
 
   const [input, setInput] = useState<Shape | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  if (typeof window === "undefined" || !theme) return null;
+  const toggleSelectedShapeId = (inputId: string | null) => {
+    setSelectedShapeId(inputId);
+  };
 
   const themedColor = theme === "dark" ? "#fff" : "#000";
 
@@ -51,27 +55,44 @@ export const Canvas = ({
   };
 
   useEffect(() => {
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d");
-      if (ctx) {
-        const newCanvasEngine = new CanvasEngine(
-          shapesDetails,
-          selectedTool,
-          setSelectedTool,
-          selectedShapeId,
-          theme,
-          themedColor,
-          canvasRef.current,
-          ctx
-        );
-        canvasEngine.current = newCanvasEngine;
-      }
-    }
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    canvasEngine.current = new CanvasEngine(
+      shapesDetails,
+      selectedTool,
+      setSelectedTool,
+      toggleSelectedShapeId,
+      selectedShapeId,
+      theme,
+      themedColor,
+      canvas,
+      ctx
+    );
+
+    canvasEngine.current.startFn(); // important!
 
     return () => {
       canvasEngine.current?.endFn();
     };
-  }, [selectedTool, theme, themedColor, shapesDetails, canvasRef]);
+  }, []); // only runs ONCE
+
+  // Then update viewport by telling engine:
+  useEffect(() => {
+    canvasEngine.current?.updateEngine(
+      shapesDetails,
+      selectedTool,
+      selectedShapeId,
+      theme,
+      themedColor
+    );
+    canvasEngine.current?.renderAllTheShapes();
+  }, [selectedTool, selectedShapeId, shapesDetails, theme, themedColor]);
+
+  useEffect(() => {
+    console.log(selectedShapeId);
+  }, [selectedShapeId]);
 
   const autosizeText = () => {
     if (!inputRef.current) return;
@@ -93,6 +114,7 @@ export const Canvas = ({
         width={window.innerWidth}
         style={{ backgroundColor: bgColor }}
         onDoubleClick={(e) => {
+          if (selectedShapeId !== null) return;
           const rect = canvasRef.current!.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;

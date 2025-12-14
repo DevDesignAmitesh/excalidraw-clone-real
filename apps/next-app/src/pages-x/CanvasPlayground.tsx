@@ -104,8 +104,8 @@ export const CanvasPlayground = () => {
     setTheme(storedTheme);
   }, []);
   return (
-    <>
-      <div className="relative h-screen w-full">
+    <div className="relative h-screen overflow-hidden w-full">
+      <div className="relative h-full w-full">
         <Header
           selectedTool={canvasDetails.selectedTool}
           setSelectedTool={(e) => {
@@ -149,6 +149,6 @@ export const CanvasPlayground = () => {
       {rightSideBarOpen && (
         <HeaderRightBar setRightSideBarOpen={setRightSideBarOpen} />
       )}
-    </>
+    </div>
   );
 };

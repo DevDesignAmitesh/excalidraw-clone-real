@@ -16,11 +16,13 @@ export class CanvasEngine {
   public canvas: HTMLCanvasElement;
   public pencilPath: { x: number; y: number }[] = [];
   public selectedShapeId: string | null;
+  public toggleSelectedShapeId: (e: string | null) => void;
 
   constructor(
     shapesDetails: Shape,
     tool: toolType,
     setSelectedTool: (e: toolType) => void,
+    toggleSelectedShapeId: (e: string | null) => void,
     selectedShapeId: string | null,
     theme: string,
     themedColor: string,
@@ -30,14 +32,28 @@ export class CanvasEngine {
     this.shapesDetails = shapesDetails;
     this.tool = tool;
     this.setSelectedTool = setSelectedTool;
+    this.toggleSelectedShapeId = toggleSelectedShapeId;
     this.theme = theme;
     this.selectedShapeId = selectedShapeId;
     this.themedColor = themedColor;
     this.canvas = canvasRef;
     this.ctx = ctx;
-    this.startFn();
     this.renderAllTheShapes();
   }
+
+  updateEngine = (
+    shapesDetails: Shape,
+    tool: toolType,
+    selectedShapeId: string | null,
+    theme: string,
+    themedColor: string
+  ) => {
+    this.shapesDetails = shapesDetails;
+    this.tool = tool;
+    this.selectedShapeId = selectedShapeId;
+    this.theme = theme;
+    this.themedColor = themedColor;
+  };
 
   startFn = () => {
     this.canvas.addEventListener("mouseup", this.handleMouseUp);
@@ -59,6 +75,7 @@ export class CanvasEngine {
 
     allShapes.forEach((item) => {
       if (item.type === "circle") {
+        this.ctx.beginPath();
         this.createCircle({ savedShape: item });
         if (item.isSelected) {
           this.drawSelectionBox(this.ctx, item);
@@ -69,6 +86,7 @@ export class CanvasEngine {
           this.drawSelectionBox(this.ctx, item);
         }
       } else if (item.type === "rectangle") {
+        this.ctx.beginPath();
         this.createRect({ savedShape: item });
         if (item.isSelected) {
           this.drawSelectionBox(this.ctx, item);
@@ -179,8 +197,8 @@ export class CanvasEngine {
     ) {
       console.log("running");
       shapesStorage.updateShape(this.selectedShapeId, {
-        x,
-        y,
+        x: e.clientX,
+        y: e.clientY,
       });
 
       console.log("shape is updating");
@@ -594,12 +612,13 @@ export class CanvasEngine {
           y >= shape.y! &&
           y <= shape.y! + shape.height!
         ) {
-          this.selectedShapeId = shape.id;
+          console.log("rect selected", shape.id);
+          this.toggleSelectedShapeId(shape.id);
           shapesStorage.updateShape(shape.id, {
             isSelected: true,
           });
         } else {
-          this.selectedShapeId = null;
+          this.toggleSelectedShapeId(null);
           shapesStorage.updateShape(shape.id, {
             isSelected: false,
           });
@@ -609,12 +628,13 @@ export class CanvasEngine {
         const dy = y - shape.y!;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= (shape.radius ?? 0)) {
-          this.selectedShapeId = shape.id;
+          this.toggleSelectedShapeId(shape.id);
           shapesStorage.updateShape(shape.id, {
             isSelected: true,
           });
+          // MAKE A FN FOR TOGGLING THE SELCTED SHAPE ID
         } else {
-          this.selectedShapeId = null;
+          this.toggleSelectedShapeId(null);
           shapesStorage.updateShape(shape.id, {
             isSelected: false,
           });
@@ -632,13 +652,13 @@ export class CanvasEngine {
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist <= ERASER_RADIUS) {
-            this.selectedShapeId = shape.id;
+            this.toggleSelectedShapeId(shape.id);
             shapesStorage.updateShape(shape.id, {
               isSelected: true,
             });
             break;
           } else {
-            this.selectedShapeId = null;
+            this.toggleSelectedShapeId(null);
             shapesStorage.updateShape(shape.id, {
               isSelected: false,
             });
@@ -651,13 +671,13 @@ export class CanvasEngine {
         const withinX = x >= shape.x! && x <= shape.x! + textWidth;
         const withinY = y >= shape.y! - textHeight && y <= shape.y!;
         if (withinX && withinY) {
-          this.selectedShapeId = shape.id;
+          this.toggleSelectedShapeId(shape.id);
           shapesStorage.updateShape(shape.id, {
             isSelected: true,
           });
           continue;
         } else {
-          this.selectedShapeId = null;
+          this.toggleSelectedShapeId(null);
           shapesStorage.updateShape(shape.id, {
             isSelected: false,
           });

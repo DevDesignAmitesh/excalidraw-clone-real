@@ -1,8 +1,6 @@
 import { CanvasPlayground } from "@/pages-x/CanvasPlayground";
 
-const root = () => {
-  // TODO: HAVE TO LOOK AT THE CODE VERY CLOSELY......
+export default function root() {
+  // TODO: HAVE TO SEE WHY THE SELECTED SHAPE ID IS NOT WORKING......
   return <CanvasPlayground />;
-};
-
-export default root;
+}
