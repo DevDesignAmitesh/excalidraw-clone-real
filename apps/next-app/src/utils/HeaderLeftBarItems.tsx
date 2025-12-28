@@ -1,11 +1,10 @@
 import { ReactElement } from "react";
 import { CiExport, CiImport } from "react-icons/ci";
-import { FaXTwitter } from "react-icons/fa6";
 import { FiGithub } from "react-icons/fi";
+import { ImProfile } from "react-icons/im";
 import { IoShareSocialOutline } from "react-icons/io5";
 import { LuUserPlus } from "react-icons/lu";
 import { MdKeyboardCommandKey, MdOutlineDelete } from "react-icons/md";
-import { SlSocialLinkedin } from "react-icons/sl";
 import { TbLogout2 } from "react-icons/tb";
 
 interface HeaderLeftBarItemsProps {
@@ -13,7 +12,6 @@ interface HeaderLeftBarItemsProps {
   label: string;
   href?: string;
   shortCut?: string;
-  onClick?: () => void;
 }
 
 export const HeaderLeftBarItems: HeaderLeftBarItemsProps[] = [
@@ -47,18 +45,12 @@ export const HeaderLeftBarItems: HeaderLeftBarItemsProps[] = [
     icon: <TbLogout2 size={15} />,
   },
   {
-    label: "github",
+    label: "code base",
     icon: <FiGithub size={15} />,
     href: "https://github.com/DevDesignAmitesh/excalidraw-clone-real",
   },
   {
-    label: "twitter / X",
-    icon: <FaXTwitter size={15} />,
-    href: "https://x.com/amitesh48256/",
-  },
-  {
-    label: "linkedin",
-    icon: <SlSocialLinkedin size={15} />,
-    href: "https://www.linkedin.com/in/amitesh-singh-504b2b281/",
+    label: "my portfolio",
+    icon: <ImProfile size={15} />,
   },
 ];

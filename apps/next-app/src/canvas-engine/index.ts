@@ -104,7 +104,6 @@ export class CanvasEngine {
     if (e.key === "Backspace" || e.key === "Delete") {
       this.deleteOneShape();
       this.renderAllTheShapes();
-      // e.preventDefault(); // prevents browser navigation
     }
   };
 
@@ -755,6 +754,12 @@ export class CanvasEngine {
   deleteOneShape = () => {
     if (!this.selectedShapeId) return;
     shapesStorage.deleteShape(this.selectedShapeId);
+    this.renderAllTheShapes();
+  };
+
+  clearCanvas = () => {
+    console.log("delete fn running");
+    shapesStorage.deleteAllShapes();
     this.renderAllTheShapes();
   };
 }

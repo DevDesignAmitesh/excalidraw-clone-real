@@ -1,12 +1,9 @@
-import type { ReactElement } from "react";
 import { BsEraser } from "react-icons/bs";
 import { FaRegCircle, FaRegHandPaper, FaRegSquare } from "react-icons/fa";
 import { FiMousePointer } from "react-icons/fi";
 import { ImTextColor } from "react-icons/im";
-import { IoImagesOutline } from "react-icons/io5";
 import { TbPencil } from "react-icons/tb";
 import { HeaderItemsProps } from "./types";
-
 
 export const HeaderItems: HeaderItemsProps[] = [
   {
@@ -36,9 +33,5 @@ export const HeaderItems: HeaderItemsProps[] = [
   {
     label: "eraser",
     icon: <BsEraser />,
-  },
-  {
-    label: "img",
-    icon: <IoImagesOutline />,
-  },
+  }
 ];
