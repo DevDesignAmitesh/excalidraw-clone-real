@@ -27,6 +27,8 @@ type PositionedShape = BaseShape & {
   y?: number;
 };
 
+export type strokeStyle = "dashed" | "dotted" | "line";
+
 // Rectangle shape
 export type RectangleShape = PositionedShape & {
   type: "rectangle";
@@ -34,7 +36,7 @@ export type RectangleShape = PositionedShape & {
   height?: number;
   bgColor: string;
   strokeColor: string;
-  strokeStyle: "dashed" | "dotted" | "line";
+  strokeStyle: strokeStyle ;
   borderRadius: number;
 };
 
@@ -62,22 +64,8 @@ export type TextShape = PositionedShape & {
   font: string;
   fontSize: string;
 };
-
-// Image shape (optional addition)
-export type ImageShape = PositionedShape & {
-  type: "img";
-  src: string;
-  width: number;
-  height: number;
-};
-
 // Union of all shape variants
-export type Shape =
-  | RectangleShape
-  | CircleShape
-  | PencilShape
-  | TextShape
-  | ImageShape;
+export type Shape = RectangleShape | CircleShape | PencilShape | TextShape;
 
 export interface CanvasDetailsProps {
   bgColor: string;

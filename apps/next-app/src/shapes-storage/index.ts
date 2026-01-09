@@ -19,9 +19,9 @@ class ShapesStorage {
 
   updateShape(shapeId: string, shape: Partial<Shape>) {
     const allShapes = this.getAllShapes();
-    let wantToUpdate = allShapes.find((item) => item.id === shapeId);
+    const wantToUpdate = allShapes.find((item) => item.id === shapeId);
     if (wantToUpdate) {
-      // TODO: MAYBE A ERROR
+      // TODO: MAYBE AN ERROR
       const filterdShapes = allShapes.filter(
         (item) => item.id !== wantToUpdate.id
       );
@@ -30,6 +30,13 @@ class ShapesStorage {
       filterdShapes.push(updatedShape);
       localStorage.setItem(`shapes`, JSON.stringify(filterdShapes));
     }
+  }
+
+  getShape(shapeId: string) {
+    const allShapes = this.getAllShapes();
+    const wantToUpdate = allShapes.find((item) => item.id === shapeId);
+
+    return wantToUpdate;
   }
 
   deleteShape(shapeId: string) {

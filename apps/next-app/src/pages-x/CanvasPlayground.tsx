@@ -10,6 +10,7 @@ import {
 } from "@/components/HeaderLeftBar";
 import { HeaderRightBar } from "@/components/HeaderRightBar";
 import { ToolSideBar } from "@/components/ToolSideBar";
+import { shapesStorage } from "@/shapes-storage";
 import { CanvasDetailsProps, Shape } from "@/utils/types";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
@@ -113,8 +114,14 @@ export const CanvasPlayground = () => {
   };
 
   const deleteCanvas = () => {
-    console.log("is delete running???");
     canvasEngine.current?.clearCanvas();
+  };
+
+  const updateShape = (shape: Partial<Shape>) => {
+    if (!selectedShapeId) return;
+    console.log(selectedShapeId, "running")
+    shapesStorage.updateShape(selectedShapeId, shape);
+    canvasEngine.current?.renderAllTheShapes()
   };
 
   useEffect(() => {
@@ -215,7 +222,6 @@ export const CanvasPlayground = () => {
     canvasEngine.current?.renderAllTheShapes();
   }, [
     canvasDetails.selectedTool,
-    ,
     selectedShapeId,
     shapesDetails,
     theme,
@@ -287,7 +293,7 @@ export const CanvasPlayground = () => {
           selectedShapeId !== null) && (
           <ToolSideBar
             selectedTool={canvasDetails.selectedTool}
-            setShapesDetails={setShapesDetails}
+            updateShape={updateShape}
           />
         )}
         {rightSideBarOpen && (

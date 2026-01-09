@@ -108,14 +108,18 @@ export class CanvasEngine {
   };
 
   handleMouseDown = (e: MouseEvent) => {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
     this.hasMove = false;
     this.isDrawing = true;
-    this.startX = e.clientX;
-    this.startY = e.clientY;
+    this.startX = x;
+    this.startY = y;
     if (this.tool === "pencil") {
       this.ctx.beginPath();
-      this.ctx.moveTo(e.offsetX, e.offsetY);
-      this.pencilPath = [{ x: e.offsetX, y: e.offsetY }];
+      this.ctx.moveTo(x, y);
+      this.pencilPath = [{ x, y }];
     }
   };
 
@@ -132,7 +136,9 @@ export class CanvasEngine {
 
     if (!this.isDrawing) return;
     this.isDrawing = false;
-    this.ctx.closePath();
+    if (this.tool !== "pencil") {
+      this.ctx.closePath();
+    }
     this.setSelectedTool("mouse");
 
     let shape: Shape | null = null;
@@ -181,6 +187,10 @@ export class CanvasEngine {
       shapesStorage.saveShape(shape);
       this.renderAllTheShapes();
     }
+
+    if (this.tool === "pencil") {
+      this.pencilPath = [];
+    }
   };
 
   handleMouseMove = (e: MouseEvent) => {
@@ -192,15 +202,28 @@ export class CanvasEngine {
 
     if (
       (this.tool === "hand" || this.tool === "mouse") &&
-      this.selectedShapeId
+      this.selectedShapeId &&
+      this.isDrawing
     ) {
-      console.log("running");
-      shapesStorage.updateShape(this.selectedShapeId, {
-        x: e.clientX,
-        y: e.clientY,
-      });
+      const dx = x - this.startX;
+      const dy = y - this.startY;
 
-      console.log("shape is updating");
+      const shape = shapesStorage.getShape(this.selectedShapeId);
+
+      if (!shape) return;
+
+      if (shape?.type === "pencil") {
+        this.movePencil(shape, dx, dy);
+      } else {
+        // normal shapes
+        shapesStorage.updateShape(this.selectedShapeId, {
+          x: (shape.x ?? 0) + dx,
+          y: (shape.y ?? 0) + dy,
+        });
+      }
+
+      this.startX = x;
+      this.startY = y;
 
       this.renderAllTheShapes();
       return;
@@ -224,7 +247,7 @@ export class CanvasEngine {
       this.createCircle({ e, initialShape: this.shapesDetails });
       return;
     } else if (this.tool === "pencil") {
-      this.pencilPath.push({ x: e.offsetX, y: e.offsetY });
+      this.pencilPath.push({ x, y });
       this.createPencil({
         path: this.pencilPath,
         initialShape: this.shapesDetails,
@@ -278,15 +301,15 @@ export class CanvasEngine {
         }
 
         this.ctx.fill();
-      } else {
-        if (strokeColor !== "#fff" && strokeColor !== "#000") {
-          this.ctx.strokeStyle = strokeColor;
-        } else {
-          this.ctx.strokeStyle = themedColor;
-        }
-
-        this.ctx.stroke();
       }
+
+      if (strokeColor !== "#fff" && strokeColor !== "#000") {
+        this.ctx.strokeStyle = strokeColor;
+      } else {
+        this.ctx.strokeStyle = themedColor;
+      }
+
+      this.ctx.stroke();
 
       // back to normal
       this.ctx.globalAlpha = 1.0;
@@ -611,7 +634,6 @@ export class CanvasEngine {
           y >= shape.y! &&
           y <= shape.y! + shape.height!
         ) {
-          console.log("rect selected", shape.id);
           this.toggleSelectedShapeId(shape.id);
           shapesStorage.updateShape(shape.id, {
             isSelected: true,
@@ -694,9 +716,9 @@ export class CanvasEngine {
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 4]);
 
-    const PADDING = 16;
+    const PADDING = 6;
 
-    if (shape.type === "rectangle" || shape.type === "img") {
+    if (shape.type === "rectangle") {
       ctx.strokeRect(
         shape.x! - PADDING,
         shape.y! - PADDING,
@@ -758,8 +780,19 @@ export class CanvasEngine {
   };
 
   clearCanvas = () => {
-    console.log("delete fn running");
     shapesStorage.deleteAllShapes();
     this.renderAllTheShapes();
+  };
+
+  movePencil = (shape: Shape, dx: number, dy: number) => {
+    console.log("running");
+    if (shape.type === "pencil") {
+      shape.path = shape.path?.map((p) => ({
+        x: p.x + dx,
+        y: p.y + dy,
+      }));
+    }
+
+    shapesStorage.updateShape(shape.id, shape);
   };
 }
