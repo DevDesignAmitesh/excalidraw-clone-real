@@ -120,6 +120,7 @@ export const CanvasPlayground = () => {
   const updateShape = (shape: Partial<Shape>) => {
     if (!selectedShapeId) return;
     console.log(selectedShapeId, "running")
+    setShapesDetails((prev) => ({ ...prev, shape } ))
     shapesStorage.updateShape(selectedShapeId, shape);
     canvasEngine.current?.renderAllTheShapes()
   };
@@ -294,6 +295,7 @@ export const CanvasPlayground = () => {
           <ToolSideBar
             selectedTool={canvasDetails.selectedTool}
             updateShape={updateShape}
+            shapesDetails={shapesDetails}
           />
         )}
         {rightSideBarOpen && (

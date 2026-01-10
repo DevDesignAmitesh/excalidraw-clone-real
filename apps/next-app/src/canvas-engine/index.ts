@@ -265,117 +265,60 @@ export class CanvasEngine {
     initialShape?: Shape;
     savedShape?: Shape;
   }) => {
-    if (initialShape && e) {
-      const { type } = initialShape;
-      if (type !== "rectangle") {
-        return;
-      }
+    const shape = initialShape ?? savedShape;
+    if (!shape || shape.type !== "rectangle") return;
 
-      const { bgColor, borderRadius, opacity, strokeColor, strokeStyle } =
-        initialShape;
-      const WIDTH = e.clientX - this.startX;
-      const HEIGHT = e.clientY - this.startY;
-      const X = this.startX;
-      const Y = this.startY;
+    const { bgColor, borderRadius, opacity, strokeColor, strokeStyle } = shape;
 
-      const themedColor = this.theme === "dark" ? "#fff" : "#000";
+    // ---------- position & size ----------
+    const isLive = !!(initialShape && e);
 
-      // just for this shape
-      this.ctx.globalAlpha = opacity;
+    const X = isLive ? this.startX : shape.x!;
+    const Y = isLive ? this.startY : shape.y!;
 
-      if (strokeStyle === "dashed") {
-        this.ctx.setLineDash([10, 5]); // 10px line, 5px gap
-      } else if (strokeStyle === "dotted") {
-        this.ctx.setLineDash([1, 5]); // 1px dot, 5px gap
-      } else if (strokeStyle === "line") {
-        this.ctx.setLineDash([0, 0]); // 0px dot, 0px gap
-      }
+    const WIDTH = isLive ? e!.clientX - this.startX : shape.width!;
 
-      this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+    const HEIGHT = isLive ? e!.clientY - this.startY : shape.height!;
 
-      if (bgColor !== "") {
-        if (bgColor !== "#fff" && bgColor !== "#000") {
-          this.ctx.fillStyle = bgColor;
-        } else {
-          this.ctx.fillStyle = themedColor;
-        }
+    const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
-        this.ctx.fill();
-      }
+    // ---------- draw ----------
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.globalAlpha = opacity;
 
-      if (strokeColor !== "#fff" && strokeColor !== "#000") {
-        this.ctx.strokeStyle = strokeColor;
-      } else {
-        this.ctx.strokeStyle = themedColor;
-      }
-
-      this.ctx.stroke();
-
-      // back to normal
-      this.ctx.globalAlpha = 1.0;
-
-      // Reset dashes after drawing
-      this.ctx.setLineDash([]);
-    } else if (savedShape) {
-      const { type } = savedShape;
-      if (type !== "rectangle") {
-        return;
-      }
-      const {
-        bgColor,
-        borderRadius,
-        height,
-        opacity,
-        strokeColor,
-        strokeStyle,
-        width,
-        x,
-        y,
-      } = savedShape;
-      const WIDTH = width!;
-      const HEIGHT = height!;
-      const X = x!;
-      const Y = y!;
-
-      const themedColor = this.theme === "dark" ? "#fff" : "#000";
-
-      // just for this shape
-      this.ctx.globalAlpha = opacity;
-
-      if (strokeStyle === "dashed") {
-        this.ctx.setLineDash([10, 5]); // 10px line, 5px gap
-      } else if (strokeStyle === "dotted") {
-        this.ctx.setLineDash([1, 5]); // 1px dot, 5px gap
-      } else if (strokeStyle === "line") {
-        this.ctx.setLineDash([0, 0]); // 0px dot, 0px gap
-      }
-
-      this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
-
-      if (bgColor !== "") {
-        if (bgColor !== "#fff" && bgColor !== "#000") {
-          this.ctx.fillStyle = bgColor;
-        } else {
-          this.ctx.fillStyle = themedColor;
-        }
-
-        this.ctx.fill();
-      } else {
-        if (strokeColor !== "#fff" && strokeColor !== "#000") {
-          this.ctx.strokeStyle = strokeColor;
-        } else {
-          this.ctx.strokeStyle = themedColor;
-        }
-
-        this.ctx.stroke();
-      }
-
-      // back to normal
-      this.ctx.globalAlpha = 1.0;
-
-      // Reset dashes after drawing
-      this.ctx.setLineDash([]);
+    // stroke style
+    switch (strokeStyle) {
+      case "dashed":
+        this.ctx.setLineDash([10, 5]);
+        break;
+      case "dotted":
+        this.ctx.setLineDash([2, 6]);
+        break;
+      default:
+        this.ctx.setLineDash([]);
     }
+
+    // shape path
+    this.ctx.roundRect(X, Y, WIDTH, HEIGHT, borderRadius);
+
+    // fill
+    if (bgColor && bgColor !== "") {
+      this.ctx.fillStyle =
+        bgColor !== "#fff" && bgColor !== "#000" ? bgColor : themedColor;
+      this.ctx.fill();
+    }
+
+    // stroke (always)
+    this.ctx.strokeStyle =
+      strokeColor !== "#fff" && strokeColor !== "#000"
+        ? strokeColor
+        : themedColor;
+
+    this.ctx.stroke();
+
+    // reset canvas state
+    this.ctx.restore();
   };
 
   createCircle = ({
@@ -387,71 +330,41 @@ export class CanvasEngine {
     initialShape?: Shape;
     savedShape?: Shape;
   }) => {
-    if (initialShape && e) {
-      if (initialShape.type === "circle") {
-        const { bgColor, opacity, strokeColor } = initialShape;
-        const dx = e.clientX - this.startX;
-        const dy = e.clientY - this.startY;
-        const r = Math.sqrt(dx * dx + dy * dy);
-        const X = this.startX;
-        const Y = this.startY;
+    const shape = initialShape ?? savedShape;
+    if (!shape || shape.type !== "circle") return;
 
-        const themedColor = this.theme === "dark" ? "#fff" : "#000";
-        this.ctx.beginPath();
-        // for just this shape
-        this.ctx.globalAlpha = opacity;
-        this.ctx.arc(X, Y, r, 0, 2 * Math.PI);
+    const { bgColor, opacity, strokeColor } = shape;
 
-        if (bgColor !== "") {
-          if (bgColor !== "#fff" && bgColor !== "#000") {
-            this.ctx.fillStyle = bgColor;
-          } else {
-            this.ctx.fillStyle = themedColor;
-          }
-          this.ctx.fill();
-        } else {
-          if (strokeColor !== "#fff" && strokeColor !== "#000") {
-            this.ctx.strokeStyle = strokeColor;
-          } else {
-            this.ctx.strokeStyle = themedColor;
-          }
-          this.ctx.stroke();
-        }
-        // 0.0 to 1.0
-        this.ctx.globalAlpha = 1.0;
-      }
-    } else if (savedShape) {
-      if (savedShape.type === "circle") {
-        const { bgColor, opacity, strokeColor, radius, x, y } = savedShape;
-        const r = radius!;
-        const X = x!;
-        const Y = y!;
+    const X = initialShape ? this.startX : shape.x!;
+    const Y = initialShape ? this.startY : shape.y!;
+    const r = initialShape
+      ? Math.hypot(e!.clientX - this.startX, e!.clientY - this.startY)
+      : shape.radius!;
 
-        const themedColor = this.theme === "dark" ? "#fff" : "#000";
-        this.ctx.beginPath();
-        // for just this shape
-        this.ctx.globalAlpha = opacity;
-        this.ctx.arc(X, Y, r, 0, 2 * Math.PI);
+    const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
-        if (bgColor !== "") {
-          if (bgColor !== "#fff" && bgColor !== "#000") {
-            this.ctx.fillStyle = bgColor;
-          } else {
-            this.ctx.fillStyle = themedColor;
-          }
-          this.ctx.fill();
-        } else {
-          if (strokeColor !== "#fff" && strokeColor !== "#000") {
-            this.ctx.strokeStyle = strokeColor;
-          } else {
-            this.ctx.strokeStyle = themedColor;
-          }
-          this.ctx.stroke();
-        }
-        // 0.0 to 1.0
-        this.ctx.globalAlpha = 1.0;
-      }
+    this.ctx.save();
+    this.ctx.beginPath();
+
+    this.ctx.globalAlpha = opacity;
+    this.ctx.arc(X, Y, r, 0, Math.PI * 2);
+
+    // ---- fill ----
+    if (bgColor && bgColor !== "") {
+      this.ctx.fillStyle =
+        bgColor !== "#fff" && bgColor !== "#000" ? bgColor : themedColor;
+      this.ctx.fill();
     }
+
+    // ---- stroke (always) ----
+    this.ctx.strokeStyle =
+      strokeColor !== "#fff" && strokeColor !== "#000"
+        ? strokeColor
+        : themedColor;
+
+    this.ctx.stroke();
+
+    this.ctx.restore();
   };
 
   createPencil = ({
@@ -463,67 +376,35 @@ export class CanvasEngine {
     initialShape?: Shape;
     savedShape?: Shape;
   }) => {
-    if (path && initialShape) {
-      if (initialShape.type === "pencil") {
-        const { opacity, strokeColor } = initialShape;
+    const shape = initialShape ?? savedShape;
+    if (!shape || shape.type !== "pencil") return;
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(path[0].x, path[0].y);
+    const drawPath = initialShape ? path : shape.path;
+    if (!drawPath || drawPath.length < 2) return;
 
-        for (let i = 1; i < path.length; i++) {
-          this.ctx.lineTo(path[i].x, path[i].y);
-        }
+    const { opacity, strokeColor } = shape;
+    const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
-        const themedColor = this.theme === "dark" ? "#fff" : "#000";
+    this.ctx.save();
+    this.ctx.beginPath();
 
-        if (strokeColor !== "#fff" && strokeColor !== "#000") {
-          this.ctx.strokeStyle = strokeColor;
-        } else {
-          this.ctx.strokeStyle = themedColor;
-        }
-        this.ctx.lineWidth = 2;
-        this.ctx.lineCap = "round";
-        this.ctx.lineJoin = "round";
-
-        // for this shape only
-        this.ctx.globalAlpha = opacity;
-        this.ctx.stroke();
-
-        // reseting it for rest of the images
-        this.ctx.globalAlpha = 1.0;
-      }
-      return;
-    } else if (savedShape) {
-      if (savedShape.type === "pencil" && savedShape.path) {
-        const { opacity, path, strokeColor } = savedShape;
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(path[0].x, path[0].y);
-
-        for (let i = 1; i < path!.length; i++) {
-          this.ctx.lineTo(path[i].x, path[i].y);
-        }
-
-        const themedColor = this.theme === "dark" ? "#fff" : "#000";
-
-        if (strokeColor !== "#fff" && strokeColor !== "#000") {
-          this.ctx.strokeStyle = strokeColor;
-        } else {
-          this.ctx.strokeStyle = themedColor;
-        }
-
-        this.ctx.lineWidth = 2;
-        this.ctx.lineCap = "round";
-        this.ctx.lineJoin = "round";
-
-        // for this shape only
-        this.ctx.globalAlpha = opacity;
-        this.ctx.stroke();
-
-        // reseting it for rest of the images
-        this.ctx.globalAlpha = 1.0;
-      }
+    this.ctx.moveTo(drawPath[0].x, drawPath[0].y);
+    for (let i = 1; i < drawPath.length; i++) {
+      this.ctx.lineTo(drawPath[i].x, drawPath[i].y);
     }
+
+    this.ctx.globalAlpha = opacity;
+    this.ctx.lineWidth = 2;
+    this.ctx.lineCap = "round";
+    this.ctx.lineJoin = "round";
+
+    this.ctx.strokeStyle =
+      strokeColor !== "#fff" && strokeColor !== "#000"
+        ? strokeColor
+        : themedColor;
+
+    this.ctx.stroke();
+    this.ctx.restore();
   };
 
   createText = ({
@@ -533,29 +414,26 @@ export class CanvasEngine {
     inputShape: Shape;
     isNew: boolean;
   }) => {
-    if (inputShape.type === "text") {
-      const { color, input, opacity, x, y, font, fontSize } = inputShape;
-      this.ctx.font = `${fontSize}px ${font}`;
+    if (inputShape.type !== "text") return;
 
-      // for this shape
-      this.ctx.globalAlpha = opacity;
+    const { color, input, opacity, x, y, font, fontSize } = inputShape;
+    const themedColor = this.theme === "dark" ? "#fff" : "#000";
 
-      const themedColor = this.theme === "dark" ? "#fff" : "#000";
+    this.ctx.save();
 
-      if (color !== "#fff" && color !== "#000") {
-        this.ctx.fillStyle = color;
-      } else {
-        this.ctx.fillStyle = themedColor;
-      }
-      this.ctx.fillText(input, x!, y!);
+    this.ctx.font = `${fontSize}px ${font}`;
+    this.ctx.globalAlpha = opacity;
 
-      if (isNew) {
-        shapesStorage.saveShape(inputShape);
-        this.renderAllTheShapes();
-      }
+    this.ctx.fillStyle =
+      color !== "#fff" && color !== "#000" ? color : themedColor;
 
-      // reseting it
-      this.ctx.globalAlpha = 1.0;
+    this.ctx.fillText(input, x!, y!);
+
+    this.ctx.restore();
+
+    if (isNew) {
+      shapesStorage.saveShape(inputShape);
+      this.renderAllTheShapes();
     }
   };
 

@@ -3,6 +3,7 @@ import { Shape, strokeStyle, toolType } from "@/utils/types";
 interface ToolSideBarProps {
   selectedTool: toolType;
   updateShape: (shape: Partial<Shape>) => void;
+  shapesDetails: Shape;
 }
 
 export const ToolSideBar = ({
@@ -92,6 +93,7 @@ export const ToolSideBar = ({
             {[4, 8].map((r) => (
               <IconBtn key={r}>
                 <div
+                  onClick={() => updateShape({ borderRadius: r })}
                   className="h-6 w-6
                   border border-neutral-400 dark:border-neutral-400"
                   style={{ borderRadius: r }}
@@ -106,6 +108,7 @@ export const ToolSideBar = ({
       <Section title="Opacity">
         <div className="flex flex-col gap-1">
           <input
+            onChange={(e) => updateShape({ opacity: Number(e.target.value) })}
             type="range"
             min={0}
             max={100}
