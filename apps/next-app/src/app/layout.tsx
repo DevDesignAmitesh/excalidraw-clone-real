@@ -14,9 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light">
-      <ThemeProviderComp>
-        <body>{children}</body>
-      </ThemeProviderComp>
+      <body>
+        <ThemeProviderComp>{children}</ThemeProviderComp>
+      </body>
     </html>
   );
 }
