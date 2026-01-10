@@ -52,5 +52,6 @@ export const HeaderLeftBarItems: HeaderLeftBarItemsProps[] = [
   {
     label: "my portfolio",
     icon: <ImProfile size={15} />,
+    href: "https://baap.one"
   },
 ];
