@@ -48,7 +48,7 @@ export const CanvasPlayground = () => {
   const LOCAL_STORAGE_BG_COLOR = () => {
     const INDEX = JSON.parse(LOCAL_SOTRAGE_BG_COLOR_IDX ?? "100000");
 
-    let newBgColor: string = theme === "dark" ? "#fff" : "#000";
+    let newBgColor: string = theme === "dark" ? "#fff" : "#121212";
 
     if (theme === "dark" && LOCAL_SOTRAGE_BG_COLOR_IDX) {
       const bgColor = darkerBackrounds.find((_, idx) => idx === INDEX);
@@ -119,10 +119,53 @@ export const CanvasPlayground = () => {
 
   const updateShape = (shape: Partial<Shape>) => {
     if (!selectedShapeId) return;
-    console.log(selectedShapeId, "running")
-    setShapesDetails((prev) => ({ ...prev, shape } ))
+    console.log(selectedShapeId, "running");
+    setShapesDetails((prev) => ({ ...prev, shape }));
     shapesStorage.updateShape(selectedShapeId, shape);
-    canvasEngine.current?.renderAllTheShapes()
+    canvasEngine.current?.renderAllTheShapes();
+  };
+
+  const handleCanvasDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (selectedShapeId !== null) return;
+
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    setCanvasDetails((p) => ({ ...p, selectedTool: "text" }));
+    setInput({
+      id: uuid(),
+      type: "text",
+      input: "",
+      x,
+      y,
+      opacity: 100,
+      color: themedColor,
+      borderColor: themedColor,
+      font: "serif",
+      fontSize: "24",
+    });
+  };
+
+  const shouldShowToolSidebar =
+    (canvasDetails.selectedTool !== "hand" &&
+      canvasDetails.selectedTool !== "img" &&
+      canvasDetails.selectedTool !== "mouse" &&
+      canvasDetails.selectedTool !== "eraser") ||
+    selectedShapeId !== null;
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (input?.type === "text") {
+      setInput({ ...input!, input: e.target.value });
+      autosizeText();
+    }
+  };
+
+  const handleTextKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleBlur();
+    }
   };
 
   useEffect(() => {
@@ -235,47 +278,40 @@ export const CanvasPlayground = () => {
       inputRef.current.focus();
     }
   }, [input]); // run whenever we create a new text input
+
   return (
     <>
-      <div className="relative h-screen overflow-hidden w-full">
+      {/* ===================== Canvas Layout ===================== */}
+      <div className="relative h-screen w-full overflow-hidden">
         <div className="relative h-full w-full">
+          {/* ---------------- Header ---------------- */}
           <Header
             selectedTool={canvasDetails.selectedTool}
-            setSelectedTool={(e) => {
-              setCanvasDetails({ ...canvasDetails, selectedTool: e });
-              setShapesDetails({ ...shapesDetails, type: e as any });
+            setSelectedTool={(tool) => {
+              setCanvasDetails({ ...canvasDetails, selectedTool: tool });
+              setShapesDetails({ ...shapesDetails, type: tool as any });
             }}
             handleLeftSideBar={toggleLeftSideBar}
             handleRightSideBar={toggleRightSideBar}
           />
+
+          {/* ---------------- Canvas ---------------- */}
           <canvas
-            className="z-10000"
             ref={canvasRef}
+            className="z-10000"
             height={window.innerHeight}
             width={window.innerWidth}
             style={{ backgroundColor: canvasDetails.bgColor }}
-            onDoubleClick={(e) => {
-              if (selectedShapeId !== null) return;
-              const rect = canvasRef.current!.getBoundingClientRect();
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-              (setCanvasDetails((p) => ({ ...p, selectedTool: "text" })),
-                setInput({
-                  id: uuid(),
-                  type: "text",
-                  input: "",
-                  x,
-                  y,
-                  opacity: 100,
-                  color: themedColor,
-                  borderColor: themedColor,
-                  font: "serif",
-                  fontSize: "24",
-                }));
-            }}
+            onDoubleClick={handleCanvasDoubleClick}
           />
+
+          {/* ---------------- Footer ---------------- */}
           <Footer />
         </div>
+
+        {/* ===================== Sidebars ===================== */}
+
+        {/* ---- Left Sidebar ---- */}
         {leftSideBarOpen && (
           <HeaderLeftBar
             deleteCanvas={deleteCanvas}
@@ -287,66 +323,57 @@ export const CanvasPlayground = () => {
             leftSideBarRef={leftSideBarRef}
           />
         )}
-        {((canvasDetails.selectedTool !== "hand" &&
-          canvasDetails.selectedTool !== "img" &&
-          canvasDetails.selectedTool !== "mouse" &&
-          canvasDetails.selectedTool !== "eraser") ||
-          selectedShapeId !== null) && (
+
+        {/* ---- Tool Sidebar ---- */}
+        {shouldShowToolSidebar && (
           <ToolSideBar
             selectedTool={canvasDetails.selectedTool}
             updateShape={updateShape}
             shapesDetails={shapesDetails}
           />
         )}
+
+        {/* ---- Right Sidebar ---- */}
         {rightSideBarOpen && (
           <HeaderRightBar setRightSideBarOpen={setRightSideBarOpen} />
         )}
       </div>
-      <>
-        {input && input.type === "text" && (
-          <textarea
-            ref={inputRef}
-            autoFocus
-            className="absolute z-50 resize-none outline-none bg-transparent"
-            style={{
-              top: input.y,
-              left: input.x,
-              position: "absolute",
-              transform: "translate(-50%, -50%)",
 
-              // Typography from shape
-              color: themedColor,
-              fontFamily: input.font,
-              fontSize: `${input.fontSize}px`,
-              lineHeight: "1.2",
+      {/* ===================== Text Input Overlay ===================== */}
+      {input?.type === "text" && (
+        <textarea
+          ref={inputRef}
+          autoFocus
+          className="absolute z-50 resize-none outline-none bg-transparent"
+          style={{
+            top: input.y,
+            left: input.x,
+            transform: "translate(-50%, -50%)",
 
-              // Auto sizing tricks
-              overflow: "hidden",
-              whiteSpace: "pre-wrap",
-              minWidth: "20px",
-              minHeight: "10px",
+            // Typography
+            color: themedColor,
+            fontFamily: input.font,
+            fontSize: `${input.fontSize}px`,
+            lineHeight: "1.2",
 
-              // Remove default ui
-              border: "none",
-              boxShadow: "none",
-              padding: "0px",
-              backgroundColor: "transparent",
-            }}
-            value={input.input}
-            onChange={(e) => {
-              setInput({ ...input, input: e.target.value });
-              autosizeText();
-            }}
-            onBlur={handleBlur}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleBlur();
-              }
-            }}
-          />
-        )}
-      </>
+            // Auto sizing
+            overflow: "hidden",
+            whiteSpace: "pre-wrap",
+            minWidth: "20px",
+            minHeight: "10px",
+
+            // Remove default UI
+            border: "none",
+            boxShadow: "none",
+            padding: "0px",
+            backgroundColor: "transparent",
+          }}
+          value={input.input}
+          onChange={handleTextChange}
+          onBlur={handleBlur}
+          onKeyDown={handleTextKeyDown}
+        />
+      )}
     </>
   );
 };
